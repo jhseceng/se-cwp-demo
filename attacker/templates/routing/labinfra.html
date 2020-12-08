@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Lab Infrastructure {% endblock %}
+{% block content %}
+<section class="card" style="width:inherit">
+  <div class="card-body">
+   <h1 class="card-title">
+Lab Architecture</h1>
+      <p>
+            In this lab we have setup the following infrastructure<br>
+          <br><h2>Application VPC (AWS VPC Main)</h2><br>
+      <ul><li>The application VPC has an EC2 instance running a vulnerable web application inside a docker container.</li>
+          <li>The container is listening on port 8080.</li>
+          <li>An AWS ELB exposes the application to the internet on port 80</li>
+          <li>AWS WAF is configured with the AWS OWASP Top 10 ruleset.</li>
+          <li>Security Groups are configured to block all ports inbound from the internet other than port 80</li>
+          <li>The EC2 instance has no external IP and outbound external connectivity is provided via a NAT gateway</li>
+          <br></ul>
+      <br><h2>Attacker VPC (AWS VPC Kali)</h2><br>
+      <ul><li>The attacker EC2 instance running this web application together with some tools to attack the vulnerable
+          application.</li>
+      <li>The attacker instance has a public ip and connects to the web application over public internet via the AWS ELB
+          public IP.</li></ul><br>
+        </p>
+    <img class="card-img-top" src="static/infra2.png">
+  </div>
+</section>
+<section class="card" style="width:inherit">
+  <div class="card-body">
+
+   <h1 class="card-title">
+AWS Reference Architecture</h1>
+     <h6 class="card-text text-color" style="margin-top: 30px">Typical AWS Recommended Deployment:</h6>
+      <p>
+            The diagram below shows a typical deployment of a web application in AWS.  We have also included the relevant
+          security services from AWS that provide real time monitoring and protection.<br><br>
+      <ul><li>AWS WAF providing Layer 7 security</li>
+      <li>VPC flow logs to monitor network activity</li>
+      <li>Guard Duty continuously monitoring the network activity and account behavior.</li>
+      <li>Security Groups</li></ul>
+
+
+        </p>
+
+    <img class="card-img-top" src="static/infra1.png">
+  </div>
+</section>
+
+{% endblock %}

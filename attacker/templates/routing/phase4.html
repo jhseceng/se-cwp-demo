@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Phase 2 {% endblock %}
+{% block content %}
+
+<section class="card shadow p-3">
+    <div class="card-body">
+
+        <h1>Section 4 - Testing CrowdStrike Protection:</h1>
+
+        <!--Step 11-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingExploit">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse4"
+                        aria-expanded="false" aria-controls="#collapsExploit1 #collapsExploit2 #collapsExploit3">
+                    Step 11 - Exploit
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsExploit1">
+            <p>
+                Re run the script to attack the web server.  This is a repeat of the task in section 2.   Either run the
+                attack again from the cli or using the button below.
+            </p>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsExploit2">
+            <form style="margin-top: 15px">
+                <div class="form-group">
+                    <button class="btn btn button-color sendbutton"
+                            id="exploit_submit"
+                    >Run Exploit
+                    </button>
+                    <div class="loader" id="spinner" style="visibility: hidden"></div>
+                </div>
+                <div id="successAlert" class="alert alert-success" role="alert" style="display: none"></div>
+                <div id="errorAlert" class="alert alert-danger" role="alert" style="display: none"></div>
+            </form>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3 Exploit-output"
+             id="collapsExploit3"
+             style="visibility: hidden">
+    <pre id="Exploit_response">
+
+    </pre>
+        </div>
+
+        <!--Step 12-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingLateral">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse5"
+                        aria-expanded="false" aria-controls="#collapseLateral1 #collapseLateral12 #collapseLateral13">
+                    Step 12 - Lateral movement/Data Exfiltration
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse5 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateral1">
+            <p>Try to run the commands again and pay attention to the output if using the GUI.  You will now see that the
+            attack has been blocked and you no longer have control of the web server</p>
+        </div>
+        <div class="card collapse multi-collapse5 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateral2">
+            <div>
+                <form id="formsendcmd">
+                    <fieldset>
+                        <div class="form-group">
+                            <label for="customCommandInput">Enter Custom Command:</label>
+                            <input type="text" id="customCommandInput" class="form-control boxcolor"
+                                   placeholder="Custom Command">
+                        </div>
+                        <div class="form-group">
+                            <label for="cmdtosend">Select Command:</label>
+                            <select class="custom-select form-control boxcolor" id="cmdtosend">
+                                <option selected>ls -al</option>
+                                <option value="ls">ls</option>
+                                <option value="ps -ef">ps -ef</option>
+                                <option value="netstat -an">netstat -an</option>
+                                <option value="whoami">whoami</option>
+                                <option value="dig GuardDutyC2ActivityB.com any">Test GuardDutyC2Activity</option>
+                                <option value="curl -s http://xmr.pool.minergate.com/dhdhjkhdjkhdjkhajkhdjskahhjkhjkahdsjkakjasdhkjahdjk > /dev/null">
+                                    Test GuardDuty Mining
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="disabledFieldsetCheck">
+                            <label class="custom-control-label" for="disabledFieldsetCheck">Check this custom
+                                checkbox</label>
+                        </div>
+
+                        <button class="btn btn button-color sendbutton" style="margin-top: 17px" id="send_submit"
+                        >Run Command
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+            <div>
+                <div class="loader4" id="spinnerlatmove" style="visibility: hidden"></div>
+            </div>
+            <!--            <form id="formsendcmd" style="margin-top: 20px; margin-left: 20px; margin-right: 20px; margin-bottom: 20px">-->
+            <!--                <div class="input-group">-->
+            <!--                    <div class="input-group-prepend">-->
+            <!--                        <label class="input-group-text opcolor" form="inputGroupSelect01">Options</label>-->
+            <!--                    </div>-->
+
+            <!--                </div>-->
+
+            <!--            </form>-->
+        </div>
+        <div class="card collapse multi-collapse5 hide card-border shadow p-3" id="collapseLateral3"
+             style="visibility: hidden">
+           <pre id="lateral_response">
+    </pre>
+        </div>
+
+    </div>
+</section>
+
+{% endblock content %}
+{% block scriptblock %}
+<script src="/static/jenkins-common.js"></script>
+<script src="/static/phase4.js"></script>
+<script src="/static/jsonview.js"></script>
+{% endblock scriptblock %}

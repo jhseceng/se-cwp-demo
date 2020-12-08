@@ -1,0 +1,1735 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template creates the two VPCs  for an isolated testing
+  environment. It will deploy tow EC2 hosts running docker which will run an 'attacker and 'victim'.
+  The environment will demontrate how cloud security requires multiple approaches including cloud native and third party
+  Services.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Crowdstrike Falcon API keys.
+        Parameters:
+          - FalconClientId
+          - FalconSecret
+          - CCID
+      - Label:
+          default: Tagging Information
+        Parameters:
+          - Accounting
+          - Department
+          - Owner
+          - Business
+      - Label:
+          default: Jenkins Network Configuration
+        Parameters:
+          - JenkinsVPCCIDR
+          - JenkinsPrivateSubnetCIDR1
+          - JenkinsPublicSubnetCIDR1
+          - JenkinsPublicSubnetCIDR2
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - AvailabilityZones
+          - VPCCIDR
+          - PrivateSubnetCIDR
+          - PublicSubnetCIDR
+      - Label:
+          default: Amazon EC2 Configuration
+        Parameters:
+          - KeyPairName
+      - Label:
+          default: WAF Implementation
+        Parameters:
+          - ruleAction
+          - maxExpectedURISize
+          - maxExpectedQueryStringSize
+          - maxExpectedBodySize
+          - maxExpectedCookieSize
+          - adminUrlPrefix
+          - adminRemoteCidr
+          - csrfExpectedHeader
+          - csrfExpectedSize
+          - includesPrefix
+
+    ParameterLabels:
+      AvailabilityZones:
+        default: Availability Zones
+      KeyPairName:
+        default: Key Pair Name
+      PrivateSubnetCIDR:
+        default: Private Subnet CIDR
+      PublicSubnetCIDR:
+        default: Public Subnet CIDR
+      VPCCIDR:
+        default: VPC CIDR
+      stackPrefix:
+        default: Resource Name Prefix
+      ruleAction:
+        default: Rule Effect
+      includesPrefix:
+        default: Server-side components URI prefix
+      adminUrlPrefix:
+        default: URI prefix
+      adminRemoteCidr:
+        default: Allowed IP source (CIDR)
+      maxExpectedURISize:
+        default: Max. size of URI
+      maxExpectedQueryStringSize:
+        default: Max. size of QUERY STRING
+      maxExpectedBodySize:
+        default: Max. size of BODY
+      maxExpectedCookieSize:
+        default: Max. size of COOKIE
+      csrfExpectedHeader:
+        default: HTTP Request Header
+      csrfExpectedSize:
+        default: Token Size
+
+Parameters:
+  CCID:
+    Description: CrowdStrike Customer ID
+    Type: String
+    NoEcho: 'true'
+    Default: "797BCD0BF5AE4F39A2B770FF52517125-08"
+  FalconClientId:
+    Description: Falcon OAuth2 Client ID.
+    Type: String
+    NoEcho: 'true'
+    Default: '641dc606e230483e9678de95f8edf8ee'
+  FalconSecret:
+    Description: Falcon Oath2 API secret.
+    Type: String
+    NoEcho: 'true'
+    Default: 'y5f4N91i2Dg38Z6xhV7KuedOFtvz0wTnURpsomIr'
+  Owner:
+    Type: String
+    Description: Owner/Creator of resource
+    MaxLength: 20
+    Default: CrowdStrike
+
+  Business:
+      Type: String
+      Description: Department
+      MaxLength: 20
+      Default: DevDays
+
+  Accounting:
+    Type: String
+    Description: Billing Account
+    MaxLength: 20
+    Default: DevDays
+
+  Department:
+    Type: String
+    Description: Department
+    MaxLength: 20
+    Default: DevDays
+  S3Bucket:
+    Type: String
+    Description: S3 staging bucket
+
+  stackPrefix:
+    Type: String
+    Description: The prefix to use when naming resources in this stack. Normally we would use the stack name, but since this template can be used as a resource in other stacks we want to keep the naming consistent. No symbols allowed.
+    ConstraintDescription: Alphanumeric characters only, maximum 10 characters
+    AllowedPattern: ^[a-zA-z0-9]+$
+    MaxLength: 10
+    Default: waf
+  ruleAction:
+    Type: String
+    Description: The type of action you want to iplement for the rules in this set. Valid options are COUNT or BLOCK.
+    AllowedValues:
+      - BLOCK
+      - COUNT
+    Default: BLOCK
+  includesPrefix:
+    Type: String
+    Description: This is the URI path prefix (starting with '/') that identifies any files in your webroot that are server-side included components, and should not be invoked directly via URL. These can be headers, footers, 3rd party server side libraries or components. You can add additional prefixes later directly in the set.
+    Default: /includes
+  adminUrlPrefix:
+    Type: String
+    Description: This is the URI path prefix (starting with '/') that identifies your administrative sub-site. You can add additional prefixes later directly in the set.
+    Default: /admin
+  adminRemoteCidr:
+    Type: String
+    Description: This is the IP address allowed to access your administrative interface. Use CIDR notation. You can add additional ones later directly in the set.
+    Default: 127.0.0.1/32
+  maxExpectedURISize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the URI component of the HTTP request. Generally the maximum possible value is determined by the server operating system (maps to file system paths), the web server software, or other middleware components. Choose a value that accomodates the largest URI segment you use in practice in your web application.
+    Default: 512
+  maxExpectedQueryStringSize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the query string component of the HTTP request. Normally the  of query string parameters following the "?" in a URL is much larger than the URI , but still bounded by the  of the parameters your web application uses and their values.
+    Default: 1024
+  maxExpectedBodySize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the body of the request. If you do not plan to allow large uploads, set it to the largest payload value that makes sense for your web application. Accepting unnecessarily large values can cause performance issues, if large payloads are used as an attack vector against your web application.
+    Default: 4096
+  maxExpectedCookieSize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the cookie header. The maximum size should be less than 4096, the size is determined by the amount of information your web application stores in cookies. If you only pass a session token via cookies, set the size to no larger than the serialized size of the session token and cookie metadata.
+    Default: 4093
+  csrfExpectedHeader:
+    Type: String
+    Description: The custom HTTP request header, where the CSRF token value is expected to be encountered
+    Default: x-csrf-token
+  csrfExpectedSize:
+    Type: Number
+    Description: The size in bytes of the CSRF token value. For example if it's a canonically formatted UUIDv4 value the expected size would be 36 bytes/ASCII characters
+    Default: 36
+  AvailabilityZones:
+    Description: Availability Zone to use for the subnets in the VPC. You should select
+      two so that we can deploy the ALB, but we just use 1 (the first).
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+  KeyPairName:
+    Description: Public/private key pairs allow you to securely connect to your instance
+      after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+  PrivateSubnetCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.128.32/28
+    Description: CIDR block for isolated private subnet.
+    Type: String
+  PublicSubnetCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.128.0/28
+    Description: CIDR Block for the public DMZ subnet for secure administrative entry
+    Type: String
+  JenkinsPrivateSubnetCIDR1:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.64.16/28
+    Description: CIDR block for isolated private subnet.
+    Type: String
+  JenkinsPublicSubnetCIDR1:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.64.0/28
+    Description: CIDR Block for the public DMZ subnet for secure administrative entry
+    Type: String
+  JenkinsPublicSubnetCIDR2:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.64.32/28
+    Description: CIDR Block for the public DMZ subnet for secure administrative entry
+    Type: String
+  JenkinsVPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.64.0/24
+    Description: CIDR Block for the VPC
+    Type: String
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 172.16.128.0/24
+    Description: CIDR Block for the VPC
+    Type: String
+  trustedSource:
+    Default: 1.1.1.1/32
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    Description: Trusted Source IP
+    Type: String
+  LatestLinuxAMI:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+  LinuxInstanceType:
+    Type: String
+    AllowedValues:
+      - t2.small
+      - t2.micro
+    Default: t2.small
+  FigFileName:
+    Type: String
+    Description: The version of the FIG that you wish to install.
+    Default: fig-2.0.latest-install.run
+
+
+Mappings:
+  S3perRegion:
+    us-east-1:
+      NAME: aws-dev-days-crowdstrike-us-east-1
+    us-east-2:
+      NAME: aws-dev-days-crowdstrike-us-east-2
+    us-west-2:
+      NAME: aws-dev-days-crowdstrike-us-west-2
+    eu-west-1:
+      NAME: aws-dev-days-crowdstrike-eu-west-1
+    ap-southeast-2:
+      NAME: aws-dev-days-crowdstrike-ap-southeast-2
+
+Resources:
+  #
+  #  Security Hub Integration Components EC2 + SQS + Lambda to add detections to Security Hub
+  #
+  Fig:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref 'FigNetInt'
+          DeviceIndex: '0'
+      UserData:
+        Fn::Base64: !Sub |
+          #! /bin/bash
+          # version 3.0
+          cd /var/tmp
+          wget -O ${FigFileName} https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/${FigFileName}
+          chmod 755 ${FigFileName}
+          sudo -u ec2-user bash ./${FigFileName} --target /usr/share/fig
+      InstanceType: !Ref LinuxInstanceType
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      IamInstanceProfile: !Ref FigBootstrapInstanceProfile
+      ImageId: !Ref 'LatestLinuxAMI'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - Falcon-Integration-Instance
+        - Key: CRWD_MANAGED
+
+          Value: 'YES'
+        - Key: tag-accounting
+
+          Value: !Ref Accounting
+        - Key: tag-business
+
+          Value: !Ref Business
+        - Key: tag-department
+
+          Value: !Ref Department
+        - Key: tag-owner
+
+          Value: !Ref Owner
+  FigBootstrapInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'FigIAMRole'
+  FigNetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref 'AttackerPublicSubnet'
+      GroupSet:
+        - !Ref 'AttackerSecurityGroup'
+  FigEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  AssociateFigEIP:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt FigEIP.AllocationId
+      NetworkInterfaceId: !Ref 'FigNetInt'
+  FigIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - FIGRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition: { }
+      Path: /
+      Policies:
+        - PolicyName: Get_Values
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - securityhub:*
+                Resource: '*'
+  FigQueue:
+    Type: AWS::SQS::Queue
+
+    Properties:
+      VisibilityTimeout: 120
+      QueueName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - crwd-fig
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "FigDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+  FigDeadLetterQueue:
+    Type: AWS::SQS::Queue
+  CRWDFigIdentifyDetection:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: fig-identify-detections_lambda.zip
+      Layers:
+        - !Ref lambdaLayer
+      Handler: main.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt figLambdaRole.Arn
+      Runtime: python3.7
+      Timeout: 60
+  figLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - FIG-LambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition: { }
+      Path: /
+      Policies:
+        - PolicyName: Get_Values
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - securityhub:*
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+
+
+  SSMAppId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: app_id
+      Type: String
+      Value: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - 'CRWD-FIG'
+      Description: App ID.
+  SSMFigSeverityThreshold:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: severity_threshold
+      Type: String
+      Value: 3
+  SSMFigSQSQueueParma:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: sqs_queue_name
+      Type: String
+      Value:
+        Fn::GetAtt:
+          - 'FigQueue'
+          - 'Arn'
+  JenkinsVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref 'JenkinsVPCCIDR'
+      InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - Jenkins-VPC
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+  JenkinsNATGateway:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - JenkinsNatEip
+          - AllocationId
+      SubnetId:
+        Ref: JenkinsPublicSubnet1
+
+  JenkinsInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+
+  JenkinsVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref 'JenkinsVPC'
+      InternetGatewayId: !Ref 'JenkinsInternetGateway'
+  JenkinsPrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: JenkinsVPC
+      CidrBlock: !Ref 'JenkinsPrivateSubnetCIDR1'
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      Tags:
+        - Key: Name
+          Value: Private subnet
+
+  JenkinsPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref 'JenkinsVPC'
+      CidrBlock: !Ref 'JenkinsPublicSubnetCIDR1'
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      Tags:
+        - Key: Name
+          Value: Public subnet
+        - Key: Network
+          Value: Public
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+      MapPublicIpOnLaunch: true
+  JenkinsPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: JenkinsVPC
+      CidrBlock: !Ref 'JenkinsPublicSubnetCIDR2'
+      AvailabilityZone: !Select
+        - '1'
+        - !Ref 'AvailabilityZones'
+      Tags:
+        - Key: Name
+          Value: Public subnet
+        - Key: Network
+          Value: Public
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+      MapPublicIpOnLaunch: true
+  JenkinsPrivateSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: JenkinsVPC
+      Tags:
+        - Key: Name
+          Value: Private subnet
+        - Key: Network
+          Value: Private
+  JenkinsPrivateSubnetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref 'JenkinsPrivateSubnetRouteTable'
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref 'JenkinsNATGateway'
+  JenkinsPrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref 'JenkinsPrivateSubnet'
+      RouteTableId: !Ref 'JenkinsPrivateSubnetRouteTable'
+  JenkinsPublicSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: JenkinsVPC
+      Tags:
+        - Key: Name
+          Value: Public Subnets
+        - Key: Network
+          Value: Public
+  JenkinsPublicSubnetRoute:
+    DependsOn: JenkinsVPCGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref 'JenkinsPublicSubnetRouteTable'
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref 'JenkinsInternetGateway'
+  JenkinsPublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref 'JenkinsPublicSubnet1'
+      RouteTableId: !Ref 'JenkinsPublicSubnetRouteTable'
+  JenkinsPublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref 'JenkinsPublicSubnet2'
+      RouteTableId: !Ref 'JenkinsPublicSubnetRouteTable'
+  JenkinsNatEip:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  JenkinsServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB Security Group with HTTP access on port 80
+      VpcId:
+        Ref: JenkinsVPC
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - alb-sg
+      SecurityGroupIngress:
+        - IpProtocol: '-1'
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref 'JenkinsPublicSubnetCIDR1'
+        - IpProtocol: '-1'
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref 'JenkinsPublicSubnetCIDR2'
+
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: '-1'
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+  WebServerGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - Jenkins-ASG
+      Cooldown: '60'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref  'JenkinsPrivateSubnet'
+      LaunchConfigurationName: !Ref 'LaunchConfig'
+      MinSize: '0'
+      MaxSize: '1'
+      Tags:
+        - Key: Name
+          PropagateAtLaunch: true
+          Value: 'Jenkins'
+        - Key: CRWD_MANAGED
+          PropagateAtLaunch: true
+          Value: 'YES'
+        - Key: tag-accounting
+          PropagateAtLaunch: true
+          Value: !Ref Accounting
+        - Key: tag-business
+          PropagateAtLaunch: true
+          Value: !Ref Business
+        - Key: tag-department
+          PropagateAtLaunch: true
+          Value: !Ref Department
+        - Key: tag-owner
+          PropagateAtLaunch: true
+          Value: !Ref Owner
+      TargetGroupARNs:
+        - !Ref 'PublicLoadBalancerTargetGroup'
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      Comment: Install a simple application
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      ImageId: !Ref 'LatestLinuxAMI'
+      SecurityGroups:
+        - !Ref 'JenkinsServerSecurityGroup'
+      IamInstanceProfile: !Ref JenkinsBootstrapInstanceProfile
+      InstanceType: m4.large
+      UserData:
+        Fn::Base64: !Sub |
+          #! /bin/bash
+          # version 2
+          # Added ssm role
+          export REGION=${AWS::Region}
+          exec > /tmp/part-001.log 2>&1
+          sudo cd /var/tmp
+          sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_webserver_aws_ami.sh
+          sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
+          sudo chmod 755 initialize_webserver_aws_ami.sh
+          sudo chmod 755 dns-exfil.sh
+          sudo bash ./initialize_webserver_aws_ami.sh
+
+  JenkinsBootstrapRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: JenkinslBootstrapRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:*
+                Resource:
+                  - '*'
+
+              - Effect: Allow
+                Action:
+                  - ssm:DescribeAssociation
+                  - ssm:GetDeployablePatchSnapshotForInstance
+                  - ssm:GetDocument
+                  - ssm:DescribeDocument
+                  - ssm:GetManifest
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:ListAssociations
+                  - ssm:ListInstanceAssociations
+                  - ssm:PutInventory
+                  - ssm:PutComplianceItems
+                  - ssm:PutConfigurePackageResult
+                  - ssm:UpdateAssociationStatus
+                  - ssm:UpdateInstanceAssociationStatus
+                  - ssm:UpdateInstanceInformation
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ec2messages:AcknowledgeMessage
+                  - ec2messages:DeleteMessage
+                  - ec2messages:FailMessage
+                  - ec2messages:GetEndpoint
+                  - ec2messages:GetMessages
+                  - ec2messages:SendReply
+                Resource: '*'
+  JenkinsBootstrapInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'JenkinsBootstrapRole'
+
+  AttackerBootstrapInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'AttackerIAMRole'
+
+  AttackerVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref 'VPCCIDR'
+      InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+
+  AttackerInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Network
+          Value: Public
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: AttackerVPC
+      InternetGatewayId: !Ref 'AttackerInternetGateway'
+  AttackerPrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+
+      VpcId:
+        Ref: AttackerVPC
+      CidrBlock: !Ref 'PrivateSubnetCIDR'
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - Attacker-VPC
+        - Key: Network
+          Value: Private
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+  AttackerPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: AttackerVPC
+      CidrBlock: !Ref 'PublicSubnetCIDR'
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      Tags:
+        - Key: Name
+          Value: Public subnet
+        - Key: Network
+          Value: Public
+        - Key: CreatedBy
+          Value: GuardDuty Test Script
+      MapPublicIpOnLaunch: true
+  AttackerPublicSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: AttackerVPC
+      Tags:
+        - Key: Name
+          Value: Public Subnets
+        - Key: Network
+          Value: Public
+  AttackerPublicSubnetRoute:
+    DependsOn:
+      - VPCGatewayAttachment
+      - AttackerVPC
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: AttackerPublicSubnetRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId:
+        Ref: AttackerInternetGateway
+  AttackerPublicSubnetRouteTableAssociation:
+    DependsOn: AttackerVPC
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: AttackerPublicSubnet
+      RouteTableId:
+        Ref: AttackerPublicSubnetRouteTable
+
+  AttackerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enables Admin Access to basic linux hosts
+      VpcId:
+        Ref: AttackerVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref 'trustedSource'
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: '0.0.0.0/0'
+  AttackerIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: JenkinslBootstrapRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sts:*
+                Resource: "*"
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ssm:ListCommands
+                  - logs:Describe*
+                  - logs:StartQuery
+                  - ssm:DescribeInstancePatches
+                  - ssm:ListInstanceAssociations
+                  - securityhub:BatchUpdateFindings
+                  - securityhub:BatchImportFindings
+                  - ssm:ListInstanceAssociations
+                  - securityhub:ListEnabledProductsForImport
+                  - ssm:GetParameter
+                  - guardduty:ListInvitations
+                  - ssm:GetMaintenanceWindowExecutionTaskInvocation
+                  - ssm:UpdateAssociationStatus
+                  - ssm:DescribeAutomationExecutions
+                  - ssm:GetMaintenanceWindowTask
+                  - ssm:DescribeAutomationStepExecutions
+                  - ssm:UpdateInstanceInformation
+                  - logs:FilterLogEvents
+                  - ssm:PutComplianceItems
+                  - ssm:GetConnectionStatus
+                  - ssm:GetMaintenanceWindowExecutionTask
+                  - logs:List*
+                  - ssm:GetOpsItem
+                  - ssm:GetMaintenanceWindowExecution
+                  - ec2messages:AcknowledgeMessage
+                  - logs:StopQuery
+                  - ssm:GetParameters
+                  - logs:Get*
+                  - ssm:DescribeOpsItems
+                  - ssm:DescribeEffectivePatchesForPatchBaseline
+                  - ssm:GetServiceSetting
+                  - ssm:DescribeAssociationExecutions
+                  - ec2messages:SendReply
+                  - ssm:DescribeDocumentPermission
+                  - ssm:ListCommandInvocations
+                  - ssm:GetAutomationExecution
+                  - ssm:GetDefaultPatchBaseline
+                  - ssm:DescribeDocument
+                  - ec2messages:GetEndpoint
+                  - ssmmessages:OpenControlChannel
+                  - ec2messages:GetMessages
+                  - ssm:GetPatchBaselineForPatchGroup
+                  - ssm:PutConfigurePackageResult
+                  - ssm:DescribePatchGroupState
+                  - ssm:GetManifest
+                  - ec2messages:DeleteMessage
+                  - ec2messages:FailMessage
+                  - ssm:DescribeInstancePatchStates
+                  - ssm:DescribeInstancePatchStatesForPatchGroup
+                  - ssmmessages:OpenDataChannel
+                  - ssm:GetDocument
+                  - ssm:GetInventorySchema
+                  - ssm:GetParametersByPath
+                  - ssm:GetMaintenanceWindow
+                  - ssm:DescribeInstanceAssociationsStatus
+                  - ssm:DescribeAssociationExecutionTargets
+                  - ssm:DescribeInstanceProperties
+                  - ssm:GetPatchBaseline
+                  - ssm:DescribeAssociation
+                  - guardduty:ListDetectors
+                  - ssm:GetDeployablePatchSnapshotForInstance
+                  - ssm:GetParameterHistory
+                  - logs:TestMetricFilter
+                  - ssmmessages:CreateControlChannel
+                  - ssm:DescribeEffectiveInstanceAssociations
+                  - ssm:DescribeInventoryDeletions
+                  - ssm:GetInventory
+                  - ssm:GetOpsSummary
+                  - ssm:DescribeActivations
+                  - ssm:GetCommandInvocation
+                  - ssmmessages:CreateDataChannel
+                  - ssm:PutInventory
+                  - ssm:DescribeInstanceInformation
+                  - ssm:ListTagsForResource
+                  - ssm:DescribeDocumentParameters
+                  - guardduty:ListOrganizationAdminAccounts
+                  - ssm:ListAssociations
+                  - ssm:UpdateInstanceAssociationStatus
+                  - ssm:DescribeAvailablePatches
+                Resource: "*"
+              - Sid: VisualEditor1
+                Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - guardduty:GetFindings
+                  - guardduty:ListThreatIntelSets
+                  - ssm:ListDocumentVersions
+                  - ssm:DescribeDocument
+                  - guardduty:ListFindings
+                  - ssm:GetParameters
+                  - guardduty:GetDetector
+                  - ssm:GetParameter
+                  - ssm:StartSession
+                  - ssm:PutParameter
+                  - ssm:RemoveTagsFromResource
+                  - ssm:AddTagsToResource
+                  - ssm:ListTagsForResource
+                  - ssm:DescribeDocumentParameters
+                  - ssm:DescribeDocumentPermission
+                  - guardduty:ListFilters
+                  - guardduty:ListPublishingDestinations
+                  - guardduty:GetFilter
+                  - guardduty:ListTagsForResource
+                  - guardduty:ListMembers
+                Resource:
+                  - arn:aws:guardduty:*:*:detector/*
+                  - arn:aws:ssm:*:*:document/*
+                  - arn:aws:ec2:*:*:instance/*
+                  - arn:aws:ssm:*:*:parameter/*
+                  - arn:aws:ssm:*:*:patchbaseline/*
+                  - arn:aws:ssm:*:*:maintenancewindow/*
+              - Sid: VisualEditor2
+                Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - ssm:PutParameter
+                  - ssm:ListDocumentVersions
+                  - ssm:DescribeDocument
+                  - ssm:RemoveTagsFromResource
+                  - ssm:AddTagsToResource
+                  - ssm:ListTagsForResource
+                  - ssm:DescribeDocumentParameters
+                  - ssm:DescribeDocumentPermission
+                  - ssm:GetParameters
+                  - ssm:GetParameter
+                  - ssm:StartSession
+                Resource: arn:aws:ssm:*:*:managed-instance/*
+
+
+
+  # Lambda layer provides python request library
+  lambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - python3.7
+      Content:
+        S3Bucket: !Ref S3Bucket
+        S3Key: layer.zip
+      Description: Layer for requests package
+      LayerName: requests-package
+
+
+  TriggerLambda:
+    Type: 'Custom::TriggerLambda'
+    Properties:
+      ServiceToken: !GetAtt 'CreateSSMDocument.Arn'
+
+
+  CreateSSMDocument:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          package_name: 'FalconSensor'
+          s3bucket: !Ref S3Bucket
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: lambda_ssm_setup.zip
+      Layers:
+        - !Ref lambdaLayer
+      Handler: lambda_ssm_setup.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt ssmsetupLambdaRole.Arn
+      Runtime: python3.7
+      Timeout: 60
+
+  ssmsetupLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaRoleToSetupSSM4
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: Get_Values
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: "*"
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - s3:GetBucketObjectLockConfiguration
+                  - s3:GetObject
+                  - s3:GetObjectTorrent
+                  - ssm:UpdateDocument
+                  - ssm:DeleteDocument
+                  - ssm:CreateDocument
+                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+
+  AttackerEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  AssociateAttackerEIP:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt AttackerEIP.AllocationId
+      NetworkInterfaceId: !Ref 'AttackerNetInt'
+  AttackerNetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref 'AttackerPublicSubnet'
+      GroupSet:
+        - !Ref 'AttackerSecurityGroup'
+  Attacker:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref 'AttackerNetInt'
+          DeviceIndex: '0'
+      UserData:
+        Fn::Base64: !Sub |
+          #! /bin/bash
+          # version 3.0
+          # export account id and region on instance startup
+          # Added region and cloudwatch log group
+          exec > /tmp/part-001.log 2>&1
+          cat > /etc/profile.d/load_env.sh << 'EOF'
+          export ATTACKER=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+          export VICTIM=${PublicLoadBalancer.DNSName}
+          export REGION=${AWS::Region}
+          export LOG_GROUP=${LogGroup}
+          EOF
+          sudo cd /var/tmp
+          sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_attacker_aws_ami.sh
+          sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
+          sudo chmod 755 initialize_attacker.sh
+          sudo chmod 755 dns-exfil.sh
+          sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
+      InstanceType: m4.large
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      IamInstanceProfile: !Ref AttackerBootstrapInstanceProfile
+      ImageId: !Ref 'LatestLinuxAMI'
+      Tags:
+        - Key: Name
+          Value: 'Attacker'
+        - Key: CRWD_MANAGED
+          Value: 'YES'
+        - Key: tag-accounting
+          Value: !Ref Accounting
+        - Key: tag-business
+          Value: !Ref Business
+        - Key: tag-department
+          Value: !Ref Department
+        - Key: tag-owner
+          Value: !Ref Owner
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Join
+        - ''
+        - - !Ref 'AWS::StackName'
+          - Jenkins-ALB
+      SecurityGroups:
+        - !Ref 'PublicLoadBalancerSecurityGroup'
+      Subnets:
+        - !Ref 'JenkinsPublicSubnet1'
+        - !Ref 'JenkinsPublicSubnet2'
+      Scheme: internet-facing
+    DependsOn:
+      - JenkinsVPC
+      - JenkinsInternetGateway
+  PublicLoadBanlancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref 'PublicLoadBalancerTargetGroup'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: 80
+      Protocol: HTTP
+  PublicLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 60
+      UnhealthyThresholdCount: 10
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '8080'
+      HealthCheckPath: /
+      Matcher:
+        HttpCode: '200'
+      Port: 8080
+      Protocol: HTTP
+      VpcId:
+        Ref: JenkinsVPC
+
+  PublicLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public ALB Security Group with HTTP access on port 80 from
+        the internet
+      VpcId:
+        Ref: JenkinsVPC
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - PublicLoadBalancerSecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: '0.0.0.0/0'
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 8080
+          CidrIp: '0.0.0.0/0'
+
+
+  wafrSQLiSet:
+    DependsOn: PublicLoadBalancer
+    Type: AWS::WAFRegional::SqlInjectionMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-sqli']]
+      SqlInjectionMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: HTML_ENTITY_DECODE
+  wafrSQLiRule:
+    DependsOn: PublicLoadBalancer
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'mitigatesqli']]
+      Name: !Join ['-', [!Ref stackPrefix, 'mitigate-sqli']]
+      Predicates:
+        - Type: SqlInjectionMatch
+          Negated: false
+          DataId: !Ref wafrSQLiSet
+  wafrAuthTokenStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-auth-tokens']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          PositionalConstraint: CONTAINS
+          TargetString: example-session-id
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: authorization
+          PositionalConstraint: ENDS_WITH
+          TargetString: .TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
+          TextTransformation: URL_DECODE
+  wafrAuthTokenRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'badauthtokens']]
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-bad-auth-tokens']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrAuthTokenStringSet
+  wafrXSSSet:
+    Type: AWS::WAFRegional::XssMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-xss']]
+      XssMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: HTML_ENTITY_DECODE
+  wafrXSSRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'mitigatexss']]
+      Name: !Join ['-', [!Ref stackPrefix, 'mitigate-xss']]
+      Predicates:
+        - Type: XssMatch
+          Negated: false
+          DataId: !Ref wafrXSSSet
+  wafrPathsStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-rfi-lfi-traversal']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: HTML_ENTITY_DECODE
+  wafrPathsRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'detectrfilfi']]
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-rfi-lfi-traversal']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrPathsStringSet
+  wafrAdminUrlStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-admin-url']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: STARTS_WITH
+          TargetString: !Ref adminUrlPrefix
+          TextTransformation: URL_DECODE
+  wafrAdminRemoteAddrIpSet:
+    Type: AWS::WAFRegional::IPSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-admin-remote-ip']]
+      IPSetDescriptors:
+        - Type: IPV4
+          Value: !Ref adminRemoteCidr
+  wafrAdminAccessRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'detectadminaccess']]
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-admin-access']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrAdminUrlStringSet
+        - Type: IPMatch
+          Negated: true
+          DataId: !Ref wafrAdminRemoteAddrIpSet
+  wafrPHPInsecureQSStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-php-insecure-var-refs']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: _SERVER[
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: _ENV[
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: auto_prepend_file=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: auto_append_file=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: allow_url_include=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: disable_functions=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: open_basedir=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: safe_mode=
+          TextTransformation: URL_DECODE
+  wafrPHPInsecureURIStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-php-insecure-uri']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: php
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: /
+          TextTransformation: URL_DECODE
+  wafrPHPInsecureRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'detectphpinsecure']]
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-php-insecure']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrPHPInsecureQSStringSet
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrPHPInsecureURIStringSet
+  wafrSizeRestrictionSet:
+    Type: AWS::WAFRegional::SizeConstraintSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'size-restrictions']]
+      SizeConstraints:
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref maxExpectedURISize
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref maxExpectedQueryStringSize
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref maxExpectedBodySize
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref maxExpectedCookieSize
+  wafrSizeRestrictionRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'restrictsizes']]
+      Name: !Join ['-', [!Ref stackPrefix, 'restrict-sizes']]
+      Predicates:
+        - Type: SizeConstraint
+          Negated: false
+          DataId: !Ref wafrSizeRestrictionSet
+  wafrCSRFMethodStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-csrf-method']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: METHOD
+          PositionalConstraint: EXACTLY
+          TargetString: post
+          TextTransformation: LOWERCASE
+  wafrCSRFTokenSizeConstraint:
+    Type: AWS::WAFRegional::SizeConstraintSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-csrf-token']]
+      SizeConstraints:
+        - FieldToMatch:
+            Type: HEADER
+            Data: !Ref csrfExpectedHeader
+          TextTransformation: NONE
+          ComparisonOperator: EQ
+          Size: !Ref csrfExpectedSize
+  wafrCSRFRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'enforcecsrf']]
+      Name: !Join ['-', [!Ref stackPrefix, 'enforce-csrf']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrCSRFMethodStringSet
+        - Type: SizeConstraint
+          Negated: true
+          DataId: !Ref wafrCSRFTokenSizeConstraint
+  wafrServerSideIncludeStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-ssi']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: STARTS_WITH
+          TargetString: !Ref includesPrefix
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .cfg
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .conf
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .config
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .ini
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .log
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .bak
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .backup
+          TextTransformation: LOWERCASE
+  wafrServerSideIncludeRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'detectssi']]
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-ssi']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafrServerSideIncludeStringSet
+  wafrBlacklistIpSet:
+    Type: AWS::WAFRegional::IPSet
+    DependsOn: PublicLoadBalancer
+    Properties:
+      Name: !Join ['-', [!Ref stackPrefix, 'match-blacklisted-ips']]
+      IPSetDescriptors:
+        - Type: IPV4
+          Value: 10.0.0.0/8
+        - Type: IPV4
+          Value: 192.168.0.0/16
+        - Type: IPV4
+          Value: 169.254.0.0/16
+        - Type: IPV4
+          Value: 172.16.0.0/16
+        - Type: IPV4
+          Value: 127.0.0.1/32
+  wafrBlacklistIpRule:
+    Type: AWS::WAFRegional::Rule
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'blacklistedips']]
+      Name: !Join ['-', [!Ref stackPrefix, 'detect-blacklisted-ips']]
+      Predicates:
+        - Type: IPMatch
+          Negated: false
+          DataId: !Ref wafrBlacklistIpSet
+  wafrOwaspACL:
+    Type: AWS::WAFRegional::WebACL
+    DependsOn: PublicLoadBalancer
+    Properties:
+      MetricName: !Join ['', [!Ref stackPrefix, 'owaspacl']]
+      Name: !Join ['-', [!Ref stackPrefix, 'owasp-acl']]
+      DefaultAction:
+        Type: ALLOW
+      Rules:
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 10
+          RuleId: !Ref wafrSizeRestrictionRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 20
+          RuleId: !Ref wafrBlacklistIpRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 30
+          RuleId: !Ref wafrAuthTokenRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 40
+          RuleId: !Ref wafrSQLiRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 50
+          RuleId: !Ref wafrXSSRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 60
+          RuleId: !Ref wafrPathsRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 70
+          RuleId: !Ref wafrPHPInsecureRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 80
+          RuleId: !Ref wafrCSRFRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 90
+          RuleId: !Ref wafrServerSideIncludeRule
+        - Action:
+            Type: !Ref ruleAction
+          Priority: 100
+          RuleId: !Ref wafrAdminAccessRule
+  MyWebACLAssociation:
+    Type: "AWS::WAFRegional::WebACLAssociation"
+    Properties:
+      ResourceArn:
+        Ref: PublicLoadBalancer
+      WebACLId:
+        Ref: wafrOwaspACL
+  FlowLogRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'vpc-flow-logs.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'flowlogs-policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'logs:DescribeLogGroups'
+                  - 'logs:DescribeLogStreams'
+                Resource: !GetAtt 'LogGroup.Arn'
+  LogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Join ['', [!Ref 'AWS::StackName', 'vpc-flow-log']]
+      RetentionInDays: 5
+  FlowLog:
+    Type: 'AWS::EC2::FlowLog'
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt 'FlowLogRole.Arn'
+      LogGroupName: !Join ['', [!Ref 'AWS::StackName', 'vpc-flow-log']]
+      ResourceId: !Ref JenkinsVPC
+      ResourceType: 'VPC'
+      TrafficType: 'ALL'
+Outputs:
+  BackupLoadBalancerDNSName:
+    Description: The DNSName of the backup load balancer
+    Value: !GetAtt PublicLoadBalancer.DNSName
+
+  AttackerIp:
+    Description: Local IP for RedTeam Instance
+    Value: !Ref 'AttackerEIP'
+
+  VPCFlowLogGroup:
+    Description: Name of VPC Flow log group
+    Value: !Ref LogGroup

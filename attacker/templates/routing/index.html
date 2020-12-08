@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Crowdstike Cloud Security {% endblock %}
+{% block content %}
+
+<!--    <class style="margin-top: 20px">-->
+    <div class="card shadow-lg" style="width: auto;">
+    <div class="card-body">
+    <h1 class="card-title">Crowdstrike Cloud Security</h1>
+    <h4 class="card-title">
+        About Cloudstrike
+    </h4>
+    <p class="card-text">
+        With threat telemetry at scale, processing over 1 trillion events a week, CrowdStrike Falcon is an effective
+        tool designed for threat detection and response across a variety of endpoints. CrowdStrike Falcon, built
+        natively on the cloud, is designed to also natively provide protection for the cloud, leveraging both artificial
+        intelligence (AI) and behavioral-based detections. With integrated threat analysis, CrowdStrike Falcon provides
+        a combination of intelligence and security alerts to accelerate incident response, deliver enriched context,
+        streamline the investigative process and drive more accurate security responses.</p>
+
+    <p class="card-text">
+        For years, organizations have struggled to effectively combine the capabilities of their SOCs with those of the
+        cloud security teams and close the gaps in point products that are unable to visualize threats and compliance
+        issues in cloud workloads. CrowdStrike provides a comprehensive solution designed to further enhance the
+        security of workloads running on the already secure AWS, and address the compliance needs of DevSecOps teams
+        using AWS Security Hub. Customers are able to leverage CrowdStrike Falcon as their security tool for workloads
+        running on AWS and, combined with AWS Security Hub, allow for centralized and automated management of threat
+        alerts from AWS services.</p>
+
+    <p class="card-text">
+        AWS Security Hub is designed to provide users with a comprehensive view of their high-priority security alerts
+        and compliance status by aggregating, organizing, and prioritizing alerts or findings from multiple AWS
+        services, such as Amazon GuardDuty, Amazon Inspector, and Amazon Macie as well as from APN security solutions.
+        The findings are then visually summarised on integrated dashboards with actionable graphs and tables.
+    </p> 
+     <h4 class="card-title">About the Demo</h4>
+    <p class="card-text">
+
+        Security in the cloud is much like security in your on-premises data centers—only without the costs of
+        maintaining facilities and hardware. A large percentage of cloud based attacks still happen at the application
+        layer. AWS provides a number of security tools to help protect cloud based applications. Attacks can happen in a
+        number of way and security groups and WAF solution play an important role in securing web based applications
+        they do not cover all application attack vectors.
+
+    </p>
+    <p class="card-text">
+        With this demo we wish to show how security groups and Web Application Firewalls alone do not provide complete
+        application coverage. Customers should implement a "defense in depth" approach for all applications. The demo
+        focuses on a <a href="/vulnerability" target="_blank"> Java Deserialisaton Vulnerabilty </a> that existed in
+        Jenkins servers in late 2015.
+    </p>
+    </div>
+
+{% endblock %}

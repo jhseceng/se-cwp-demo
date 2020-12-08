@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}test page {% endblock %}
+{% block content %}
+
+
+
+
+ <select name="my" class="custom-select" id="jinja-select" multiple>
+ {% for managed_instance in managed_instances %}
+ <option value="{{managed_instance.InstanceId}}" >{{managed_instance}}</option>
+ {% endfor %}
+ </select>
+
+
+{% endblock content %}
+{% block scriptblock %}
+<script src="static/jsonview.js"></script>
+<script src="/static/phase1.js"></script>
+
+
+{% endblock scriptblock %}

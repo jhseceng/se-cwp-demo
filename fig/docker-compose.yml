@@ -1,0 +1,14 @@
+version: '3'
+services:
+  fig:
+    image: jharris10/fig:dev
+    ports:
+      - "443:443"
+      - "5000:5000"
+
+    depends_on:
+          - redis
+  redis:
+    image: redis
+    ports:
+      - 6379:6379

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Home Page {% endblock %}
+{% block content %}
+<section class= "card" style="width: auto">
+    <div class="card-body">
+        <h1>AWS Cloud Security</h1>
+        <p>
+            Security and Compliance is a shared responsibility between AWS and the customer.
+            This shared model can help relieve the customer’s operational burden as AWS operates,
+            manages and controls the components from the host operating system and virtualization
+            layer down to the physical security of the facilities in which the service operates.
+            The customer assumes responsibility and management of the guest operating system
+            (including updates and security patches), other associated application software as well
+            as the configuration of the AWS provided security group firewall.
+        </p>
+            
+            <h4>Infrastructure protection</h4>
+            <p>AWS protects web applications by filtering traffic based on rules that you create. For example,
+            you can filter web requests based on IP addresses, HTTP headers, HTTP body,
+            or URI strings, which allows you to block common attack patterns,
+     
+            <h4>Threat detection & continuous monitoring</h4>
+            <p>AWS identifies threats by continuously monitoring the network activity and account behavior within your
+                cloud environment.</p>
+
+            <h4>Compliance & data privacy</h4>
+            <p>AWS gives you a comprehensive view of your compliance status and continuously monitors your
+            environment using automated compliance checks based on the AWS best practices and industry standards your
+                organization follows.</p>
+
+        <h4>AWS WAF - Web Application Firewall</h4>
+        <p>AWS WAF is a web application firewall that helps protect your web applications or APIs against common web
+        exploits that may affect availability, compromise security, or consume excessive resources.
+        AWS WAF gives you control over how traffic reaches your applications by enabling you to
+        create security rules that block common attack patterns, such as SQL injection or cross-site
+        scripting, and rules that filter out specific traffic patterns you define.
+        You can get started quickly using Managed Rules for AWS WAF, a pre-configured set of rules managed
+        by AWS or AWS Marketplace Sellers. The Managed Rules for WAF address issues like the OWASP
+        Top 10 security risks. These rules are regularly updated as new issues emerge. AWS WAF includes a
+        full-featured API that you can use to automate the creation, deployment, and maintenance of
+            security rules.</p>
+
+    <h4>
+        AWS Guard Duty
+    </h4>
+    <p>
+        GuardDuty identifies threats by continuously monitoring the network activity and account behavior within the AWS
+        environment. Amazon GuardDuty comes integrated with up-to-date threat intelligence feeds from AWS, CrowdStrike,
+        and Proofpoint. Threat intelligence coupled with machine learning and behavior models help you detect activity
+        such as crypto-currency mining, credential compromise behavior, communication with known command-and-control
+        servers, or API calls from known malicious IPs
+    </p>
+  
+    <h4>
+        AWS Security Groups
+    </h4>
+    <p>
+        AWS security groups  are associated with EC2 instances and provide security at the protocol and port access
+        level. Security Groups may be thought of as a stateful ACL or layer 4 firewall and contains a set of rules that
+        filter traffic into and out of an EC2 instance.
+    </p>
+   
+<h4>
+    AWS Nat Gateways
+</h4>
+    <p>
+       You can use a network address translation (NAT) gateway to enable instances in a private subnet to connect to
+        the internet or other AWS services, but prevent the internet from initiating a connection with those instances.
+    </p>
+    </div>
+</section>
+
+
+
+{% endblock %}

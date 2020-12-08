@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Stage 3 - Managing the Agent Install Process {% endblock %}
+{% block content %}
+
+<section class="card shadow p-3">
+    <div class="card-body">
+
+        <h1>Section 3 - Manage CrowdStrike Protection:</h1>
+
+        <!--Step 9-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingExploit">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse4"
+                        aria-expanded="false" aria-controls="#collapsCstrike1 #collapsCstrike2 #collapsCstrike3">
+                    Step 9 - Manage CrowdStrike Protection Policies
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsCstrike1">
+            <p>
+            <h2>Background</h2>
+            CrowdStrike sensors will be deployed with a default policy that provides protection for your workloads. The
+            policy may be customised by your security teams to meet specific objectives. One way that we can customise
+            the default policy is to add a "Custom IOA.<br>
+            <h2>Instructions</h2>
+            Log into your falcon console and follow the instructions in the link below to create your custom IOA and apply it to your Linux policy.
+            We will then install the falcon agent on the web server.
+            <br>
+            <a class="name-hlink" target="_blank"
+               href="/static/create-policy.pdf">Create a CrowdStrike
+                Custom IOA</a>
+            </p>
+        </div>
+
+        <!--Step 9-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="hostQuery">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link name-color" data-toggle="collapse"
+                        data-target=".multi-collapse6"
+                        aria-expanded="true" aria-controls="#collapse6Query1 #collapseQuery2 #collapseQuery3"
+                        id="queryHostsSubmit">
+                    Step 10 - Manage Falcon Agent Install
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse6 card-border shadow p-3" style="margin-top: 20px; margin-bottom: 5px"
+             id="collapse6Query1">
+            <div>
+                <button class="btn btn button-color sendbutton btn-md" id="drawHostTableSubmit">Refresh Table
+                </button>
+            </div>
+
+            <div>
+                <div class="loader2" id="spinnerHostQuery" style="visibility: hidden"></div>
+            </div>
+        </div>
+        <div class="card shadow collapse multi-collapse6 card-border p-3" style="visibility: visible"
+             id="query_host_out">
+            <div class="table-responsive">
+                <table id="hostQueryTable">
+                    <!-- here goes our data! -->
+                </table>
+            </div>
+            <div class="row">
+                <form class="form-group col-md-6">
+                    <label>
+                        <h6>package_name</h6>
+                    </label>
+                    <input type="text" class="form-control boxcolor" id="package_name" value="FalconSensor">
+                </form>
+                <form class="form-group col-md-6">
+                    <label>
+                        <h6>document_name</h6>
+                    </label>
+                    <input type="text" class="form-control boxcolor" id="document_name" value="AWS-ConfigureAWSPackage"
+                           readonly>
+                </form>
+                <form class="form-group col-md-6">
+                    <div class="btn btn button-color sendbutton" style="margin-top: 10px; visibility: visible"
+                         id="falconformInstallSubmit">Update Hosts
+                    </div>
+
+                    <div>
+                        <div class="loader2" id="spinnerfalconinstall" style="visibility: hidden"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div style="margin-top: 20px">
+            <a class="name-color2" href="{{ url_for('launch_phase4') }}">Section 3 - Testing CrowdStrike Falcon Protection</a>
+        </div>
+
+
+    </div>
+</section>
+
+
+
+{% endblock content %}
+{% block scriptblock %}
+<!--<script src="/static/jenkins-common.js"></script>-->
+<script src="/static/phase3.js"></script>
+<!--<script src="/static/jsonview.js"></script>-->
+{% endblock scriptblock %}

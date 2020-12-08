@@ -1,0 +1,45 @@
+{
+    "schemaVersion": "2.0",
+    "version": "3.0",
+    "packages": {
+        "windows": {
+            "_any": {
+                "x86_64": {
+                    "file": "CS_WINDOWS.zip"
+                }
+            }
+        },
+        "amazon": {
+            "_any": {
+                "x86_64": {
+                    "file": "CS_AMAZON.zip"
+                }
+            }
+        },
+        "ubuntu": {
+            "_any": {
+                "x86_64": {
+                    "file": "CS_UBUNTU.zip"
+                }
+            }
+        }
+    },
+    "files": {
+        "CS_WINDOWS.zip": {
+            "checksums": {
+                "sha256": "bf4cbd2a6f4e07cbfe62deafc16878853b9c0f0f7eef94b129e26e221ebf9070"
+            }
+        },
+        "CS_AMAZON.zip": {
+            "checksums": {
+                "sha256": "ff9fd0ef5e6ee721d8ce45e1697c54dd8bf603531ae1160cb0f3559ceaff50d5"
+            }
+        },
+        "CS_UBUNTU.zip": {
+            "checksums": {
+                "sha256": "155e16bfe4703576f18016bf4617fe4886579b361ac9807c5303b12c9c935565"
+            }
+        }
+    }
+}
+

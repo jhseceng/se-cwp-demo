@@ -1,0 +1,77 @@
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Found credentials in shared credentials file: ~/.aws/credentials
+Mon Jun  1 23:12:04 2020
+ 
+"Called entry.translate"
+Mon Jun  1 23:12:14 2020
+ 
+"Called entry.translate"
+Found credentials in shared credentials file: ~/.aws/credentials
+Mon Jun  1 23:18:12 2020
+ 
+"Called entry.translate"
+Found credentials in shared credentials file: ~/.aws/credentials
+Mon Jun  1 23:21:02 2020
+ 
+"Called entry.translate"
+Found credentials in shared credentials file: ~/.aws/credentials
+Mon Jun  1 23:25:06 2020
+ 
+"Called entry.translate"
+Mon Jun  1 23:26:34 2020
+ 
+{
+    "SchemaVersion": "2018-10-08",
+    "ProductArn": "arn:aws:securityhub:us-west-1:517716713836:product/crowdstrike/crowdstrike-falcon",
+    "AwsAccountId": "517716713836",
+    "Id": "i-06ffdb839a2a6820aldt:889f950dcde6475a8de9062f71d4106c:36625041",
+    "GeneratorId": "Falcon Host",
+    "Types": [
+        "Namespace: TTPs",
+        "Category: Custom Intelligence",
+        "Classifier: Indicator of Attack"
+    ],
+    "CreatedAt": "2020-06-01T22:24:24Z",
+    "UpdatedAt": "2020-06-01T22:25:16.443328Z",
+    "RecordState": "ACTIVE",
+    "Severity": {
+        "Product": 5,
+        "Normalized": 100
+    },
+    "Title": "Falcon Alert. Instance: i-06ffdb839a2a6820a",
+    "Description": "A process triggered a critical severity custom rule.",
+    "SourceUrl": "https://falcon.crowdstrike.com/activity/detections/detail/889f950dcde6475a8de9062f71d4106c/36625041?_cid=797bcd0bf5ae4f39a2b770ff52517125",
+    "Resources": [
+        {
+            "Type": "AwsEc2Instance",
+            "Id": "i-06ffdb839a2a6820a",
+            "Region": "None"
+        }
+    ],
+    "Process": {
+        "Name": "nc.traditional",
+        "Path": "/bin/"
+    }
+}
+Mon Jun  1 23:26:37 2020
+ 
+"Sending manifest"

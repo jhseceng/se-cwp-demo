@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width,height=device-height,initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <link rel="stylesheet" href="https://formden.com/static/cdn/bootstrap-iso.css"/>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&family=Yanone+Kaffeesatz&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/static/navbar.css">
+    <link rel="stylesheet" href="/static/launch.css">
+    <link rel="stylesheet" href="/static/jsonview.css">
+    <link href="https://fonts.googleapis.com/css?family=Playfair+Display" rel="stylesheet">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+
+    <title>{% block title %} {% endblock %}</title>
+
+</head>
+
+<body>
+<nav class="navbar my-nav navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-light"></nav>
+    <a href="{{ url_for('home') }}" class="navbar-brand">
+        <img class="logo" src="/static/blackandwhitelogo.png" width="60px">
+    </a>
+
+    <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="icon-bar top-bar"></span>
+        <span class="icon-bar middle-bar"></span>
+        <span class="icon-bar bottom-bar"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto nav-info">
+            <li class="nav-item active">
+                <a class="nav-link hometext" href="{{ url_for('home') }}">About CrowdStrike<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('vulnerability_info') }}">About the Vulnerability</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('labinfra') }}">Lab Infrastructure</a>
+            </li>
+
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('awssec_info') }}">AWS Security Components</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="Stages" id="navbarDropdown" role="button"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Demos
+                </a>
+
+                <ul class="dropdown-menu shadow p-3 color" style="margin-bottom: 10px" aria-labelledby="navbarDropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false"> <span class="nav-label">AWS Dev Days</span><span class="caret"></span></a>
+
+                    <li class="dropdown-menu shadow p-3 color" style="margin-bottom: 10px"
+                        aria-labelledby="navbarDropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false"> <span class="nav-label">CrowdStrike/AWS Better Together</span><span class="caret"></span></a>
+                    <a class="dropdown-item item1" href="{{ url_for('labinfra') }}">Lab Infrastructure</a>
+                <a class="dropdown-item item2" href="{{ url_for('launch_phase1') }}">Section 1</a>
+                <a class="dropdown-item item3" href="{{ url_for('launch_phase2') }}">Section 2</a>
+                    <a class="dropdown-item item4" href="{{ url_for('launch_phase3') }}">Section 3</a>
+                <a class="dropdown-item item5" href="{{ url_for('launch_phase4') }}">Section 4</a>
+
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <!-- Content here -->
+    {% block content %} {% endblock content%}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+{% block scriptblock %} {% endblock scriptblock %}
+
+<script src="/a1ae9118316d0f2a19c3ce4eb71b297ffcd4f1f68e43431206e22595af302dbd/ns.js"></script>
+</body>
+
+</html>

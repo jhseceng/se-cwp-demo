@@ -1,0 +1,424 @@
+treebody {
+	font-family: 'Open Sans';
+	font-size: 16px;
+	background-color: #fff;
+	color: #808080;
+	box-sizing: border-box;
+}
+
+.line {
+	margin: 4px 0;
+	display: flex;
+	justify-content: flex-start;
+}
+
+.caret-icon {
+	width: 18px;
+	text-align: center;
+	cursor: pointer;
+}
+
+.empty-icon {
+	width: 18px;
+}
+
+.json-type {
+	margin-right: 4px;
+	margin-left: 4px;
+}
+
+.json-key {
+	color: #444;
+	margin-right: 4px;
+	margin-left: 4px;
+}
+
+.json-index {
+	margin-right: 4px;
+	margin-left: 4px;
+}
+
+.json-separator {
+
+}
+
+.json-value {
+	margin-left: 8px;
+}
+
+.json-number {
+	color: #f9ae58;
+}
+
+.json-boolean {
+	color: #ec5f66;
+}
+
+.json-string {
+	color: #86b25c;
+}
+
+.json-size {
+	margin-right: 4px;
+	margin-left: 4px;
+}
+
+/*.hide {*/
+/*	display: none;*/
+/*}*/
+
+.fas {
+	display: inline-block;
+	width: 0;
+	height: 0;
+	border-style: solid;
+}
+
+.fa-caret-down {
+	border-width: 6px 5px 0 5px;
+	border-color: #808080 transparent
+}
+
+.fa-caret-right {
+	border-width: 5px 0 5px 6px;
+	border-color: transparent transparent transparent #808080;
+}
+
+
+
+/*!**/
+/*new stuff above*!*/
+
+
+.my-nav {
+background-color: #343a40;
+}
+
+
+.my-nav a{
+font-family: 'Yanone Kaffeesatz', sans-serif;
+font-size: 20px;
+color: white;
+}
+
+.my-nav2 a{
+color: white;
+}
+
+.Info {
+margin-top: 40px;
+margin-left: -20px;
+}
+
+/*.container {*/
+/*position: absolute*/
+/*left: 0;*/
+/*top; 0;*/
+/*width: 100%;*/
+/*height: 100%;s*/
+/*}*/
+
+.card {
+background-color: white;
+}
+
+.card-text {
+color: black;   
+}
+
+.button {
+margin-left: auto;
+}
+
+body {
+background: url(Crowdstrikeimage3.jpg) no-repeat center center fixed;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+background-size: cover;
+background-blend-mode: darken;
+}
+
+.logo {
+margin-left: -30px;
+}
+
+.list {
+color: white;    
+}
+
+.icon-bar {
+width: 22px; 
+height: 2px;
+background-color: white;
+display: block;
+transition: all 0.5s;
+margin-top: 4px;
+margin-bottom: 4px;
+margin-right: -2px;
+}
+ 
+.navbar-toggler {
+border: none;
+background: transparent !important;
+}
+.navbar-toggler .top-bar {
+transform: rotate(45deg);
+transform-origin: 10% 10%;
+}
+ 
+.navbar-toggler .middle-bar {
+opacity: 0;
+}
+ 
+.navbar-toggler .bottom-bar {
+transform: rotate(-45deg);
+transform-origin: 10% 90%;
+}
+ 
+.navbar-toggler.collapsed .top-bar {
+transform: rotate(0);
+}
+ 
+.navbar-toggler.collapsed .middle-bar {
+opacity: 1;
+}
+ 
+.navbar-toggler.collapsed .bottom-bar {
+transform: rotate(0);
+}
+
+.nav-info {
+margin-top: 4px;
+}
+ 
+.navbar-toggler:focus, .navbar-toggler:active, .navbar-toggler-icon:focus {
+outline: none;
+box-shadow: none;
+}
+
+.button-color {
+color: #fe0000;
+background-color: white;
+border-color: #fe0000;
+border-radius: 20px;
+}
+
+.button-color:hover {
+color: white;
+background-color: #fe0000;
+}
+
+.h1titles {
+color: #fe0000;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+}
+
+h4 {
+color: #fe0000;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+}
+
+h1{
+color: black;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+}
+h2{
+color: black;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+}
+
+p, a ,h6 {
+color: black;
+font-family: Arial;
+}
+
+.header-color {
+color: #fe0000;
+background-color: #fe0000;
+border-color: #fe0000;
+border-radius: 40px;
+}
+
+.name-color {
+color: white;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+font-size: 25px;
+text-align: center;
+}
+
+.name-color:hover {
+color: white;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+font-size: 25px;
+text-align: center;
+}
+
+.name-color2 {
+color: black;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+font-size: 25px;
+text-align: center;
+}
+
+.name-color4 {
+color: #0000CD;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+font-size: 25px;
+text-align: center;
+}
+
+.name-color2:hover {
+color: #fe0000;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+font-size: 25px;
+text-align: center;
+}
+
+.name-color3 {
+color: #fe0000;
+}
+
+.name-color3:hover {
+color: #fe0000;
+}
+
+.name-hlink {
+color: blue;
+}
+/*
+.card-color {
+background-color: #fe0000;
+border-bottom-width: 1px;
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 1px;
+border-bottom-left-radius: 5px;
+border-bottom-right-radius: 5px;
+border-top-left-radius: 5px;
+border-top-right-radius: 5px;
+}
+*/
+
+.card-border {
+border-color: white;
+border-bottom-width: 1px;
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 1px;
+}
+
+.text-color {
+color: black;
+}
+
+.color {
+background-color: white;
+border-color: white;
+}
+
+.item:hover {
+color: #fe0000;
+background-color: white;
+}
+
+
+
+.latitle {
+color: #fe0000;
+}
+
+
+/*
+.boxcolor:hover{
+background-color: #fe0000;
+color: white;
+}
+*/
+
+.boxcolor {
+border-color: #fe0000;
+border-bottom-width: 1px;
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 1px;   
+}
+
+
+.opcolor {
+color: white;
+background-color: #fe0000;
+border-bottom-width: 1px;
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 1px;   
+}
+
+.form-control:focus {
+  border-color: #fe0000;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn:focus {
+border-color: #fe0000;
+-webkit-box-shadow: none;
+box-shadow: none;
+}
+
+/*
+.opcolors:hover {
+border-color: #fe0000;
+-webkit-box-shadow: none;
+box-shadow: none;
+}
+*/
+
+.dp-color {
+background-color: #fe0000;
+}
+
+.custom-select {
+position: relative;
+font-family: Arial;
+}
+
+.menucolor {
+border-color: white;
+border-bottom-width: 2px;
+border-left-width: 2px;
+border-right-width: 2px;
+border-top-width: 2px;
+}
+
+.card {
+border-radius: 10px;
+background: white;
+}
+
+/*dropdown hover*/
+
+.dropdown:hover>.dropdown-menu {
+	display: block;
+}
+
+.dropdown>.dropdown-toggle:active {
+  /*Without this, clicking will make it sticky*/
+    // pointer-events: none;
+}
+
+.dropdown-menu {
+border-radius: 3px;
+background: #343a40;
+border-color: #343a40;
+}
+
+.item1 {
+background:#343a40;
+color: white;
+}
+
+.item1:hover {
+background: #343a40;
+color: #fe0000;
+}

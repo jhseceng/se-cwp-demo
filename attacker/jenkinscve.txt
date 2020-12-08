@@ -1,0 +1,15 @@
+[i] Found (#1): /root/exploit-database/files_exploits.csv
+[i] To remove this message, please edit "/root/exploit-database/.searchsploit_rc" for "files_exploits.csv" (package_array: exploitdb)
+
+[i] Found (#1): /root/exploit-database/files_shellcodes.csv
+[i] To remove this message, please edit "/root/exploit-database/.searchsploit_rc" for "files_shellcodes.csv" (package_array: exploitdb)
+
+{
+	"SEARCH": "Jenkins 2.32",
+	"DB_PATH_EXPLOIT": "/root/exploit-database",
+	"RESULTS_EXPLOIT": [
+		{"Title":"CloudBees Jenkins 2.32.1 - Java Deserialization"","URL":"https://www.exploit-db.com/exploits/41965"}
+	],
+	"DB_PATH_SHELLCODE": "/root/exploit-database",
+	"RESULTS_SHELLCODE": [	]
+}
