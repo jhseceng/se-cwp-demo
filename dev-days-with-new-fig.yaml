@@ -277,6 +277,9 @@ Resources:
           #! /bin/bash
           # version 3.0
           cd /var/tmp
+          hostname -b devdays35-fig
+          echo devdays35-fig > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost devdays35-fig/g'
           wget -O ${FigFileName} https://raw.githubusercontent.com/CrowdStrike/Cloud-AWS/master/Falcon-Integration-Gateway/install/${FigFileName}
           chmod 755 ${FigFileName}
           ./${FigFileName} --target /usr/share/fig
