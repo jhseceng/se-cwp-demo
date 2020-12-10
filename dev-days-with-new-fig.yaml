@@ -277,7 +277,7 @@ Resources:
           #! /bin/bash
           # version 3.0
           cd /var/tmp
-          wget -O ${FigFileName} https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/${FigFileName}
+          wget -O ${FigFileName} https://raw.githubusercontent.com/CrowdStrike/Cloud-AWS/master/Falcon-Integration-Gateway/install/${FigFileName}
           chmod 755 ${FigFileName}
           sudo -u ec2-user bash ./${FigFileName} --target /usr/share/fig
       InstanceType: !Ref LinuxInstanceType
