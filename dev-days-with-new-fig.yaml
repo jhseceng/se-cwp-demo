@@ -279,7 +279,7 @@ Resources:
           cd /var/tmp
           wget -O ${FigFileName} https://raw.githubusercontent.com/CrowdStrike/Cloud-AWS/master/Falcon-Integration-Gateway/install/${FigFileName}
           chmod 755 ${FigFileName}
-          sudo -u ec2-user bash ./${FigFileName} --target /usr/share/fig
+          ./${FigFileName} --target /usr/share/fig
       InstanceType: !Ref LinuxInstanceType
       AvailabilityZone: !Select
         - '0'
