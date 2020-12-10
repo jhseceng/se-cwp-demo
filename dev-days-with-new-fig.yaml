@@ -662,6 +662,9 @@ Resources:
           # Added ssm role
           export REGION=${AWS::Region}
           exec > /tmp/part-001.log 2>&1
+          hostname -b devdays35-jenkins
+          echo devdays35-jenkins > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost devdays35-jenkins/g'
           sudo cd /var/tmp
           sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_webserver_aws_ami.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
@@ -1109,6 +1112,9 @@ Resources:
           export LOG_GROUP=${LogGroup}
           EOF
           sudo cd /var/tmp
+          hostname -b devdays35-attacker
+          echo devdays35-attacker > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost devdays35-attacker/g'
           sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_attacker_aws_ami.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_attacker.sh
