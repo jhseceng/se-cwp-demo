@@ -298,16 +298,16 @@ Resources:
         - Key: CRWD_MANAGED
 
           Value: 'YES'
-        - Key: tag-accounting
+        - Key: cstag-accounting
 
           Value: !Ref Accounting
-        - Key: tag-business
+        - Key: cstag-business
 
           Value: !Ref Business
-        - Key: tag-department
+        - Key: cstag-department
 
           Value: !Ref Department
-        - Key: tag-owner
+        - Key: cstag-owner
 
           Value: !Ref Owner
   FigBootstrapInstanceProfile:
@@ -633,16 +633,16 @@ Resources:
         - Key: CRWD_MANAGED
           PropagateAtLaunch: true
           Value: 'YES'
-        - Key: tag-accounting
+        - Key: cstag-accounting
           PropagateAtLaunch: true
           Value: !Ref Accounting
-        - Key: tag-business
+        - Key: cstag-business
           PropagateAtLaunch: true
           Value: !Ref Business
-        - Key: tag-department
+        - Key: cstag-department
           PropagateAtLaunch: true
           Value: !Ref Department
-        - Key: tag-owner
+        - Key: cstag-owner
           PropagateAtLaunch: true
           Value: !Ref Owner
       TargetGroupARNs:
@@ -687,7 +687,10 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: JenkinslBootstrapRolePolicy
+        - PolicyName: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - JenkinslBootstrapRolePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -868,7 +871,10 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: JenkinslBootstrapRolePolicy
+        - PolicyName: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - JenkinslBootstrapRolePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -1049,7 +1055,12 @@ Resources:
   ssmsetupLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: LambdaRoleToSetupSSM4
+# Force dynamic role name
+#      RoleName: LambdaRoleToSetupSSM4
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - LambdaRoleToSetupSSM4
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -1134,22 +1145,22 @@ Resources:
           Value: 'Attacker'
         - Key: CRWD_MANAGED
           Value: 'YES'
-        - Key: tag-accounting
+        - Key: cstag-accounting
           Value: !Ref Accounting
-        - Key: tag-business
+        - Key: cstag-business
           Value: !Ref Business
-        - Key: tag-department
+        - Key: cstag-department
           Value: !Ref Department
-        - Key: tag-owner
+        - Key: cstag-owner
           Value: !Ref Owner
 
   PublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: !Join
-        - ''
+        - '-'
         - - !Ref 'AWS::StackName'
-          - Jenkins-ALB
+          - ALB
       SecurityGroups:
         - !Ref 'PublicLoadBalancerSecurityGroup'
       Subnets:
