@@ -669,7 +669,7 @@ Resources:
           echo devdays35-jenkins > /etc/hostname
           cat /etc/hosts | sed 's/  localhost/localhost devdays35-jenkins/g'
           sudo cd /var/tmp
-          sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_webserver_aws_ami.sh
+          sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_webserver_aws_ami.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_webserver_aws_ami.sh
           sudo chmod 755 dns-exfil.sh
@@ -1129,7 +1129,7 @@ Resources:
           hostname -b devdays35-attacker
           echo devdays35-attacker > /etc/hostname
           cat /etc/hosts | sed 's/  localhost/localhost devdays35-attacker/g'
-          sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_attacker_aws_ami.sh
+          sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_attacker_aws_ami.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_attacker.sh
           sudo chmod 755 dns-exfil.sh
