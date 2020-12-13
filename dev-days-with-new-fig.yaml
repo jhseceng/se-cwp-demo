@@ -352,6 +352,93 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
+
+  VulnTarget:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref 'VulnNetInt'
+          DeviceIndex: '0'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          hostname -b devdays35-vuln
+          echo devdays35-vuln > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost devdays35-vuln/g'
+          wget -O authorized_keys https://raw.githubusercontent.com/jshcodes/stuff/main/authorized_keys
+          mkdir /secret
+          wget -O /secret/devops-server-flag.txt https://raw.githubusercontent.com/jshcodes/stuff/main/vuln-flag.txt
+          cat authorized_keys >> /root/.ssh/authorized_keys
+      InstanceType: t2.micro
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      IamInstanceProfile: !Ref VulnBootstrapInstanceProfile
+      ImageId: !Ref 'LatestLinuxAMI'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'vuln'
+        - Key: CRWD_MANAGED
+          Value: 'YES'
+        - Key: cstag-accounting
+          Value: !Ref Accounting
+        - Key: cstag-business
+          Value: !Ref Business
+        - Key: cstag-department
+          Value: !Ref Department
+        - Key: cstag-owner
+          Value: !Ref Owner
+
+  VulnNetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref 'JenkinsPrivateSubnet'
+      GroupSet:
+        - !GetAtt JenkinsVPC.DefaultSecurityGroup
+
+  VulnBootstrapInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'VulnIAMRole'
+
+  VulnIAMRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: !Join
+          - '-'
+          - - !Ref 'AWS::StackName'
+            - vuln-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: ec2.amazonaws.com
+              Action: sts:AssumeRole
+              Condition: { }
+        Path: /
+        Policies:
+          - PolicyName: !Join
+              - '-'
+              - - !Ref 'AWS::StackName'
+                - vuln-server-s3-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: s3:List*
+                  Resource: "arm:aws:s3:::devdays35-target"
+                - Effect: Allow
+                  Action: s3:Get*
+                  Resource: "arn:aws:s3:::devdays35-target/*"
+
+
   FigQueue:
     Type: AWS::SQS::Queue
 
@@ -667,6 +754,7 @@ Resources:
       ImageId: !Ref 'LatestLinuxAMI'
       SecurityGroups:
         - !Ref 'JenkinsServerSecurityGroup'
+        - !GetAtt JenkinsVPC.DefaultSecurityGroup
       IamInstanceProfile: !Ref JenkinsBootstrapInstanceProfile
       InstanceType: m4.large
       UserData:
