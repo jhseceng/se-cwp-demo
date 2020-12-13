@@ -133,13 +133,11 @@
                             <label for="cmdtosend">Select Command:</label>
                             <select class="custom-select form-control boxcolor" id="cmdtosend">
                                 <option selected>ls -al</option>
-                                <option value="ls">ls</option>
-                                <option value="ps -ef">ps -ef</option>
-                                <option value="netstat -an">netstat -an</option>
-                                <option value="whoami">whoami</option>
-                                <option value="sudo apt-get update -y">sudo apt-get update -y</option>
-                                <option value="sudo apt-get install -y dnsutils">sudo apt-get install -y dnsutils
-                                </option>
+                                <option value="ls -al">List directory contents (ls -al)</option>
+                                <option value="ps -ef">View running processes (ps -ef)</option>
+                                <option value="netstat -an">View current network connections (netstat -an)</option>
+                                <option value="whoami">Identify running user (whoami)</option>
+                                <option value="cat /root/.bash_history">Read root user's command history (cat /root/.bash_history)</option>
                                 <option value="dig GuardDutyC2ActivityB.com any">dig GuardDutyC2ActivityB.com any
                                 </option>
                                 <option value="curl -s http://xmr.pool.minergate.com/dhdhjkhdjkhdjkhajkhdjskahhjkhjkahdsjkakjasdhkjahdjk > /dev/null">
@@ -147,12 +145,6 @@
                                 </option>
                             </select>
                         </div>
-                        <!--{#                        <div class="form-check">#}-->
-                        <!--{#                            <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck">#}-->
-                        <!--{#                            <label class="form-check-label" for="disabledFieldsetCheck">#}-->
-                        <!--{#                                Use custom command#}-->
-                        <!--{#                            </label>#}-->
-                        <!--{#                        </div>#}-->
 
                         <div class="custom-control custom-checkbox">
                             <input type="checkbox" class="custom-control-input" id="disabledFieldsetCheck">
@@ -168,19 +160,10 @@
             <div>
                 <div class="loader4" id="spinnerlatmove" style="visibility: hidden"></div>
             </div>
-            <!--            <form id="formsendcmd" style="margin-top: 20px; margin-left: 20px; margin-right: 20px; margin-bottom: 20px">-->
-            <!--                <div class="input-group">-->
-            <!--                    <div class="input-group-prepend">-->
-            <!--                        <label class="input-group-text opcolor" form="inputGroupSelect01">Options</label>-->
-            <!--                    </div>-->
-
-            <!--                </div>-->
-
-            <!--            </form>-->
         </div>
         <div class="card collapse multi-collapse5 hide card-border shadow p-3" id="collapseLateral3"
              style="visibility: collapse">
-           <pre id="lateral_response">
+           <pre id="lateral_response" style="line-height:1">
     </pre>
         </div>
 
