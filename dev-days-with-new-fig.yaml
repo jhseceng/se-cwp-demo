@@ -392,21 +392,18 @@ Resources:
           Value: !Ref Department
         - Key: cstag-owner
           Value: !Ref Owner
-
   VulnNetInt:
     Type: AWS::EC2::NetworkInterface
     Properties:
       SubnetId: !Ref 'JenkinsPrivateSubnet'
       GroupSet:
         - !GetAtt JenkinsVPC.DefaultSecurityGroup
-
   VulnBootstrapInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
         - !Ref 'VulnIAMRole'
-
   VulnIAMRole:
       Type: AWS::IAM::Role
       Properties:
@@ -433,7 +430,7 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action: s3:List*
-                  Resource: "arm:aws:s3:::devdays35-target"
+                  Resource: "arn:aws:s3:::devdays35-target"
                 - Effect: Allow
                   Action: s3:Get*
                   Resource: "arn:aws:s3:::devdays35-target/*"
