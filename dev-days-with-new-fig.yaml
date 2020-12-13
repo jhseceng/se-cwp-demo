@@ -294,7 +294,7 @@ Resources:
           Value: !Join
             - '-'
             - - !Ref 'AWS::StackName'
-              - Falcon-Integration-Instance
+              - 'falcon-integration-gateway'
         - Key: CRWD_MANAGED
 
           Value: 'YES'
@@ -343,20 +343,15 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service: ec2.amazonaws.com
             Action: sts:AssumeRole
             Condition: { }
       Path: /
-      Policies:
-        - PolicyName: Get_Values
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: VisualEditor0
-                Effect: Allow
-                Action:
-                  - securityhub:*
-                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
   FigQueue:
     Type: AWS::SQS::Queue
 
@@ -418,11 +413,24 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
 
-
+  SSMFigClientId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: FIG_FALCON_CLIENT_ID
+      Type: String
+      Value: !Ref 'FalconClientId'
+      Description: Falcon Client ID for FIG connection
+  SSMFigClientSecret:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: FIG_FALCON_CLIENT_SECRET
+      Type: String
+      Value: !Ref 'FalconSecret'
+      Description: Falcon Client secret for FIG connection      
   SSMAppId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: app_id
+      Name: FIG_APP_ID
       Type: String
       Value: !Join
         - '-'
@@ -432,18 +440,18 @@ Resources:
   SSMFigSeverityThreshold:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: severity_threshold
+      Name: FIG_SEVERITY_THRESHOLD
       Type: String
       Value: 3
-  SSMFigSQSQueueParma:
+  SSMFigSQSQueueName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: sqs_queue_name
+      Name: FIG_SQS_QUEUE_NAME
       Type: String
       Value:
         Fn::GetAtt:
           - 'FigQueue'
-          - 'Arn'
+          - 'QueueName'
   JenkinsVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -629,7 +637,10 @@ Resources:
       Tags:
         - Key: Name
           PropagateAtLaunch: true
-          Value: 'Jenkins'
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'jenkins'
         - Key: CRWD_MANAGED
           PropagateAtLaunch: true
           Value: 'YES'
@@ -1055,8 +1066,6 @@ Resources:
   ssmsetupLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-# Force dynamic role name
-#      RoleName: LambdaRoleToSetupSSM4
       RoleName: !Join
         - '-'
         - - !Ref 'AWS::StackName'
@@ -1142,7 +1151,10 @@ Resources:
       ImageId: !Ref 'LatestLinuxAMI'
       Tags:
         - Key: Name
-          Value: 'Attacker'
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'attacker'
         - Key: CRWD_MANAGED
           Value: 'YES'
         - Key: cstag-accounting
