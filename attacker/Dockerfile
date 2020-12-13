@@ -4,7 +4,7 @@ MAINTAINER justin-harris
 
 RUN apt-get update && apt-get install -y git curl wget netcat nmap net-tools dnsutils sudo python3 python3-pip && rm -rf /var/lib/apt/lists/*
 
-RUN echo 'root:paloalto' | chpasswd
+RUN echo 'root:crowdstrike' | chpasswd
 
 ENV TINI_VERSION v0.14.0
 ADD https://raw.githubusercontent.com/jhseceng/secframework/master/jenkins/tini /bin/tini
