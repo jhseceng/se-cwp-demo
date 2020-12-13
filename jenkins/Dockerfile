@@ -29,7 +29,7 @@ EXPOSE 50000
 
 COPY jenkins.sh /usr/local/bin/jenkins.sh
 COPY .ssh /root/.ssh
-COPY secret /
+COPY secret /secret
 
 RUN chmod 600 /root/.ssh/*
 RUN echo '   StrictHostKeyChecking no' >> /etc/ssh/ssh_config
