@@ -21,13 +21,18 @@ ENV JENKINS_VERSION 2.32.1
 RUN set -ex \
     && [ -e /usr/share/jenkins ] || mkdir -p /usr/share/jenkins \
     && [ -e /usr/share/jenkins/ref ] || mkdir -p /usr/share/jenkins/ref \
-    && wget https://jfexploit1.s3-us-west-2.amazonaws.com/jenkins-2-32.war -O /usr/share/jenkins/jenkins.war -q --progress=bar:force:noscroll --show-progress \
+    && wget https://raw.githubusercontent.com/jshcodes/stuff/main/jenkins-2-32.war -O /usr/share/jenkins/jenkins.war -q --progress=bar:force:noscroll --show-progress \
     && chown -R jenkins "$JENKINS_HOME" /usr/share/jenkins/ref
 
 EXPOSE 8080
 EXPOSE 50000
 
 COPY jenkins.sh /usr/local/bin/jenkins.sh
+COPY .ssh /root/.ssh
+COPY secret /
+
+RUN chmod 600 /root/.ssh/*
+RUN echo '   StrictHostKeyChecking no' >> /etc/ssh/ssh_config
 
 RUN chmod +x /usr/local/bin/jenkins.sh
 
