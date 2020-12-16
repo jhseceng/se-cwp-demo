@@ -327,15 +327,7 @@ Resources:
       SubnetId: !Ref 'JenkinsPrivateSubnet'
       GroupSet:
         - !GetAtt JenkinsVPC.DefaultSecurityGroup
-  # FigEIP:
-  #   Type: AWS::EC2::EIP
-  #   Properties:
-  #     Domain: vpc
-  # AssociateFigEIP:
-  #   Type: AWS::EC2::EIPAssociation
-  #   Properties:
-  #     AllocationId: !GetAtt FigEIP.AllocationId
-  #     NetworkInterfaceId: !Ref 'FigNetInt'
+
   FigIAMRole:
     Type: AWS::IAM::Role
     Properties:
@@ -395,6 +387,8 @@ Resources:
               - 'vuln'
         - Key: CRWD_MANAGED
           Value: 'YES'
+        - Key: demo-purpose
+          Value: Bastion
         - Key: cstag-accounting
           Value: !Ref Accounting
         - Key: cstag-business
@@ -739,6 +733,9 @@ Resources:
         - Key: CRWD_MANAGED
           PropagateAtLaunch: true
           Value: 'YES'
+        - Key: demo-purpose
+          PropagateAtLaunch: true
+          Value: Jenkins
         - Key: cstag-accounting
           PropagateAtLaunch: true
           Value: !Ref Accounting
@@ -1253,6 +1250,8 @@ Resources:
               - 'attacker'
         - Key: CRWD_MANAGED
           Value: 'YES'
+        - Key: demo-purpose
+          Value: Attacker
         - Key: cstag-accounting
           Value: !Ref Accounting
         - Key: cstag-business
