@@ -319,9 +319,9 @@ Resources:
   FigNetInt:
     Type: AWS::EC2::NetworkInterface
     Properties:
-      SubnetId: !Ref 'AttackerPublicSubnet'
+      SubnetId: !Ref 'JenkinsPrivateSubnet'
       GroupSet:
-        - !Ref 'AttackerSecurityGroup'
+        - !GetAtt JenkinsVPC.DefaultSecurityGroup
   FigEIP:
     Type: AWS::EC2::EIP
     Properties:
@@ -769,7 +769,7 @@ Resources:
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_webserver_aws_ami.sh
           sudo chmod 755 dns-exfil.sh
-          sudo bash ./initialize_webserver_aws_ami.sh
+          sudo bash ./initialize_webserver_aws_ami.sh -t ${VulnTarget.PrivateIp}
 
   JenkinsBootstrapRole:
     Type: AWS::IAM::Role
