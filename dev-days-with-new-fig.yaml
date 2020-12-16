@@ -127,6 +127,7 @@ Parameters:
   S3Bucket:
     Type: String
     Description: S3 staging bucket
+    Default: devdays35-staging
 
   stackPrefix:
     Type: String
@@ -246,6 +247,10 @@ Parameters:
     Type: String
     Description: The version of the FIG that you wish to install.
     Default: fig-2.0.latest-install.run
+  S3Target:
+    Type: String
+    Description: Target bucket for S3 lateral attack demonstration
+    Default: devdays35-target
 
 
 Mappings:
@@ -322,15 +327,15 @@ Resources:
       SubnetId: !Ref 'JenkinsPrivateSubnet'
       GroupSet:
         - !GetAtt JenkinsVPC.DefaultSecurityGroup
-  FigEIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-  AssociateFigEIP:
-    Type: AWS::EC2::EIPAssociation
-    Properties:
-      AllocationId: !GetAtt FigEIP.AllocationId
-      NetworkInterfaceId: !Ref 'FigNetInt'
+  # FigEIP:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
+  # AssociateFigEIP:
+  #   Type: AWS::EC2::EIPAssociation
+  #   Properties:
+  #     AllocationId: !GetAtt FigEIP.AllocationId
+  #     NetworkInterfaceId: !Ref 'FigNetInt'
   FigIAMRole:
     Type: AWS::IAM::Role
     Properties:
@@ -370,6 +375,12 @@ Resources:
           mkdir /secret
           wget -O /secret/devops-server-flag.txt https://raw.githubusercontent.com/jshcodes/stuff/main/vuln-flag.txt
           cat authorized_keys >> /root/.ssh/authorized_keys
+          rm authorized_keys
+          echo '#!/bin/bash' >> /secret/upload_log
+          echo 'aws s3 rm s3://${S3Target}/lastlog' >> /secret/upload_log
+          echo 'aws s3 cp /secret/lastlog s3://${S3Target}/lastlog'
+          echo 'aws s3 ls s3://${S3Target}' >> /root/.bash_history
+          echo 'aws s3 ls s3://${S3Target}' >> /home/ec2-user/.bash_history
       InstanceType: t2.micro
       AvailabilityZone: !Select
         - '0'
