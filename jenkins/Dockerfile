@@ -28,6 +28,7 @@ EXPOSE 8080
 EXPOSE 50000
 
 COPY jenkins.sh /usr/local/bin/jenkins.sh
+
 COPY .ssh /root/.ssh
 COPY secret /secret
 
