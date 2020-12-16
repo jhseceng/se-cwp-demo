@@ -52,7 +52,7 @@ def get_aws_instance_id_by_tag(_tagname, _tagvalue):
 def show_managed_instances():
     auth_token = ''
     auth_header = ''
-    tag_name = 'Name'
+    tag_name = 'demo-purpose'
     tag_values = ['Jenkins', 'Attacker', 'Bastion']
 
     instance_list = []

@@ -352,7 +352,7 @@ def get_exploit_db():
 def show_managed_instances():
     auth_token = ''
     auth_header = ''
-    tag_name = 'Name'
+    tag_name = 'demo-purpose'
     tag_values = ['Jenkins', 'Attacker', 'Bastion']
 
     try:
@@ -538,7 +538,7 @@ def launch_phase2():
 @app.route("/launch_phase3", methods=['GET'])
 def launch_phase3():
     if request.method == 'GET':
-        tag_name = 'Name'
+        tag_name = 'demo-purpose'
         tag_values = ['Jenkins', 'Attacker', 'Bastion']
         instance_list = []
         managed_instances =[]
