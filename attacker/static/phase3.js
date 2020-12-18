@@ -156,23 +156,23 @@ document.getElementById("falconformInstallSubmit").addEventListener("click",
     })
 
 
-// async function sendSsmCommand(payload) {
-//     try {
-//         const response = await fetch('/installfalcon',
-//             {
-//                 method: 'POST',
-//                 cache: "no-cache",
-//                 body: JSON.stringify(payload),
-//                 headers: new Headers
-//                 ({
-//                     "content-type": "application/json"
-//                 })
-//             })
-//         let data = await response.json()
-//         return data
-//
-//     } catch {
-//         console.log('error in fetching posts')
-//     }
-// }
-//
+async function sendSsmCommand(payload) {
+    try {
+        const response = await fetch('/installfalcon',
+            {
+                method: 'POST',
+                cache: "no-cache",
+                body: JSON.stringify(payload),
+                headers: new Headers
+                ({
+                    "content-type": "application/json"
+                })
+            })
+        let data = await response.json()
+        return data
+
+    } catch {
+        console.log('error in fetching posts')
+    }
+}
+
