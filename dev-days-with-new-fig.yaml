@@ -501,7 +501,13 @@ Resources:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
         - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
-
+  AppFalconClientId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Falcon_ClientID
+      Type: String
+      Value: !Ref 'FalconClientId'
+      Description: Falcon Client ID for FIG connection
   SSMFigClientId:
     Type: AWS::SSM::Parameter
     Properties:
@@ -509,6 +515,15 @@ Resources:
       Type: String
       Value: !Ref 'FalconClientId'
       Description: Falcon Client ID for FIG connection
+
+  AppFalconClientSecret:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Falcon_Secret
+      Type: String
+      Value: !Ref 'FalconSecret'
+      Description: Falcon Client secret for FIG connection      
+  
   SSMFigClientSecret:
     Type: AWS::SSM::Parameter
     Properties:
