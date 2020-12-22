@@ -523,6 +523,14 @@ Resources:
       Type: String
       Value: !Ref 'FalconSecret'
       Description: Falcon Client secret for FIG connection      
+
+  AppAgentActivationKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: AgentActivationKey
+      Type: String
+      Value: !Ref 'CCID'
+      Description: Agent Installation key          
   
   SSMFigClientSecret:
     Type: AWS::SSM::Parameter
