@@ -425,6 +425,9 @@ Resources:
               Action: sts:AssumeRole
               Condition: { }
         Path: /
+        ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         Policies:
           - PolicyName: !Join
               - '-'
