@@ -120,7 +120,7 @@ def ssm_install_command(action: str, document_name: str, instance_ids: list, par
         res.headers['Content-type'] = 'application/json'
     except Exception as e:
         logger.info('Got Exception {}'.format(e))
-        data = {"Result": "Request format not json"}
+        data = {"Result": "Error: {}".format(e)}
     return data
 
 
