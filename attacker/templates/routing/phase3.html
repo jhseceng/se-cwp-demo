@@ -34,7 +34,7 @@
             </p>
         </div>
 
-        <!--Step 9-->
+        <!--Step 10-->
         <div class="card-header header-color headersize" style="margin-top: 20px" id="hostQuery">
             <h5 class="mb-0">
                 <button type="button" class="btn btn-link name-color" data-toggle="collapse"
@@ -44,6 +44,17 @@
                     Step 10 - Manage Falcon Agent Install
                 </button>
             </h5>
+        </div>
+                <div class="card collapse multi-collapse6 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapse6Query1">
+            <p>
+            <h2>Background</h2>
+            We use AWS systems manager API to manage the falcon agent installation and removal from the EC2 host. The table below shows data obtained from both the AWS API and the CrowdStike API.  You will notice that the CrowdStrike 'aid' and agent version fields are populated when the agent install is complete.<br>
+
+            <br>
+
+            </p>
         </div>
         <div class="card collapse multi-collapse6 card-border shadow p-3" style="margin-top: 20px; margin-bottom: 5px"
              id="collapse6Query1">
@@ -89,7 +100,7 @@
             </div>
         </div>
         <div style="margin-top: 20px">
-            <a class="name-color2" href="{{ url_for('launch_phase4') }}">Section 4 - Testing CrowdStrike Falcon Protection</a>
+            <a class="name-color2" href="{{ url_for('launch_phase4') }}">Section 3 - Testing CrowdStrike Falcon Protection</a>
         </div>
 
 
