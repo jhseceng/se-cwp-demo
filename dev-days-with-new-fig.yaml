@@ -1258,9 +1258,11 @@ Resources:
           echo devdays35-attacker > /etc/hostname
           cat /etc/hosts | sed 's/  localhost/localhost devdays35-attacker/g'
           sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_attacker_aws_ami.sh
+          sudo wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_attacker.sh
           sudo chmod 755 dns-exfil.sh
+          sudo chmod +x /usr/local/bin/start-exercise
           sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
       InstanceType: m4.large
       AvailabilityZone: !Select
