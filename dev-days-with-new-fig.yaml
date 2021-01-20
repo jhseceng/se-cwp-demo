@@ -787,7 +787,7 @@ Resources:
         - !Ref 'JenkinsServerSecurityGroup'
         - !GetAtt JenkinsVPC.DefaultSecurityGroup
       IamInstanceProfile: !Ref JenkinsBootstrapInstanceProfile
-      InstanceType: m4.large
+      InstanceType: t2.large
       UserData:
         Fn::Base64: !Sub |
           #! /bin/bash
@@ -1264,7 +1264,7 @@ Resources:
           sudo chmod 755 dns-exfil.sh
           sudo chmod +x /usr/local/bin/start-exercise
           sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
-      InstanceType: m4.large
+      InstanceType: t2.large
       AvailabilityZone: !Select
         - '0'
         - !Ref 'AvailabilityZones'
