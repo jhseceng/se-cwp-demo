@@ -370,7 +370,10 @@ def show_managed_instances():
             falcon_aid = ''
             host_query_filter = "platform_name: 'Linux' + instance_id: '" + instance['AWS InstanceId'] + "'"
             fc = {"Criterion": {"resource.instanceDetails.instanceId": {"Eq": [instance['AWS InstanceId']]}}}
-            guard_duty_findings = "Yes" if len(get_findings(fc)['FindingIds']) > 0 else "No"
+            try:
+                guard_duty_findings = "Yes" if len(get_findings(fc)['FindingIds']) > 0 else "No"
+            except:
+                guard_duty_findings = "No"
 
             falcon_aid = query_falcon_host(auth_header, host_query_filter)
             if falcon_aid:
