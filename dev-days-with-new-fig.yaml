@@ -282,9 +282,9 @@ Resources:
           #! /bin/bash
           # version 3.0
           cd /var/tmp
-          hostname -b devdays35-fig
-          echo devdays35-fig > /etc/hostname
-          cat /etc/hosts | sed 's/  localhost/localhost devdays35-fig/g'
+          hostname -b ${AWS::StackName}-fig
+          echo ${AWS::StackName}-fig > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-fig/g'
           wget -O ${FigFileName} https://raw.githubusercontent.com/CrowdStrike/Cloud-AWS/master/Falcon-Integration-Gateway/install/${FigFileName}
           chmod 755 ${FigFileName}
           ./${FigFileName} --target /usr/share/fig
@@ -360,9 +360,9 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          hostname -b devdays35-vuln
-          echo devdays35-vuln > /etc/hostname
-          cat /etc/hosts | sed 's/  localhost/localhost devdays35-vuln/g'
+          hostname -b ${AWS::StackName}-vuln
+          echo ${AWS::StackName}-vuln > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-vuln/g'
           wget -O authorized_keys https://raw.githubusercontent.com/jshcodes/stuff/main/authorized_keys
           mkdir /secret
           wget -O /secret/devops-server-flag.txt https://raw.githubusercontent.com/jshcodes/stuff/main/vuln-flag.txt
@@ -370,7 +370,7 @@ Resources:
           rm authorized_keys
           echo '#!/bin/bash' >> /secret/upload_log
           echo 'aws s3 rm s3://${S3Target}/lastlog' >> /secret/upload_log
-          echo 'aws s3 cp /secret/lastlog s3://${S3Target}/lastlog'
+          echo 'aws s3 cp /secret/lastlog s3://${S3Target}/lastlog' >> /secret/upload_log
           echo 'aws s3 ls s3://${S3Target}' >> /root/.bash_history
           echo 'aws s3 ls s3://${S3Target}' >> /home/ec2-user/.bash_history
       InstanceType: t2.micro
@@ -795,9 +795,9 @@ Resources:
           # Added ssm role
           export REGION=${AWS::Region}
           exec > /tmp/part-001.log 2>&1
-          hostname -b devdays35-jenkins
-          echo devdays35-jenkins > /etc/hostname
-          cat /etc/hosts | sed 's/  localhost/localhost devdays35-jenkins/g'
+          hostname -b ${AWS::StackName}-jenkins
+          echo ${AWS::StackName}-jenkins > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-jenkins/g'
           sudo cd /var/tmp
           sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_webserver_aws_ami.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
@@ -1254,9 +1254,9 @@ Resources:
           export LOG_GROUP=${LogGroup}
           EOF
           sudo cd /var/tmp
-          hostname -b devdays35-attacker
-          echo devdays35-attacker > /etc/hostname
-          cat /etc/hosts | sed 's/  localhost/localhost devdays35-attacker/g'
+          hostname -b ${AWS::StackName}-attacker
+          echo ${AWS::StackName}-attacker > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-attacker/g'
           sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_attacker_aws_ami.sh
           sudo wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
