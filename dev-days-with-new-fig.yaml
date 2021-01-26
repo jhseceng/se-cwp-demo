@@ -441,10 +441,22 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action: s3:List*
-                  Resource: "arn:aws:s3:::devdays35-target"
+                  Resource: !Join
+                      - ''
+                      - - "arn:aws:s3:::"
+                        - !Ref 'AWS::StackName'
+                        - '-'
+                        - !Ref S3Target
+
                 - Effect: Allow
                   Action: s3:Get*
-                  Resource: "arn:aws:s3:::devdays35-target/*"
+                  Resource: !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref 'AWS::StackName'
+                      - '-'
+                      - !Ref S3Target
+                      - '/*'
 
 
   FigQueue:

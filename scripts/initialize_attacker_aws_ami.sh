@@ -36,7 +36,7 @@ cd /var/tmp
 echo "version: '3'" > docker-compose.yml
 echo "services:" >> docker-compose.yml
 echo "  attacker:" >> docker-compose.yml
-echo "    image: jharris10/attacker-devdays:dev12" >> docker-compose.yml
+echo "    image: jharris10/attacker-devdays:dev13" >> docker-compose.yml
 echo "    deploy:"
 echo "      restart_policy:"
 echo "        condition: unless-stopped"
