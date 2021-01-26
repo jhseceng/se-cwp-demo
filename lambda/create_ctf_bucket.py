@@ -16,8 +16,9 @@ FAILED = "FAILED"
 
 region = os.environ['AWS_REGION']
 
-
+s3_source_bucket = os.environ['s3_source_bucket']
 s3_destination_bucket = os.environ['s3_destination_bucket']
+s3_file = os.environ['s3_file']
 
 
 
@@ -190,6 +191,8 @@ def lambda_handler(event, context):
         logger.info('Event = ' + event['RequestType'])
 
         if create_ctf_bucket(s3_destination_bucket):
+            Bucket = S3BucketHandler(region)
+            Bucket.s3_copy_file(s3_source_bucket, s3_destination_bucket, s3_file)
             CRWD_Discover_result = 'Success'
             logger.info('sending cfn success')
             cfnresponse_send(event, context, SUCCESS, responseData)

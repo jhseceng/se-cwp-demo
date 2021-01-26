@@ -1195,6 +1195,7 @@ Resources:
     Properties:
       Environment:
         Variables:
+          s3_file: 's3-flag.txt'
           s3_source_bucket: !Ref S3Bucket
           s3_destination_bucket: !Join
             - '-'
