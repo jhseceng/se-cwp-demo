@@ -86,6 +86,7 @@ Metadata:
         default: Token Size
 
 Parameters:
+
   CCID:
     Description: CrowdStrike Customer ID
     Type: String
@@ -127,6 +128,7 @@ Parameters:
   S3Bucket:
     Type: String
     Description: S3 staging bucket
+    Default: devdays35-staging
 
   stackPrefix:
     Type: String
@@ -246,6 +248,10 @@ Parameters:
     Type: String
     Description: The version of the FIG that you wish to install.
     Default: fig-2.0.latest-install.run
+  S3Target:
+    Type: String
+    Description: Target bucket for S3 lateral attack demonstration
+    Default: devdays35-target
 
 
 Mappings:
@@ -277,9 +283,12 @@ Resources:
           #! /bin/bash
           # version 3.0
           cd /var/tmp
-          wget -O ${FigFileName} https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/${FigFileName}
+          hostname -b ${AWS::StackName}-fig
+          echo ${AWS::StackName}-fig > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-fig/g'
+          wget -O ${FigFileName} https://raw.githubusercontent.com/CrowdStrike/Cloud-AWS/master/Falcon-Integration-Gateway/install/${FigFileName}
           chmod 755 ${FigFileName}
-          sudo -u ec2-user bash ./${FigFileName} --target /usr/share/fig
+          ./${FigFileName} --target /usr/share/fig
       InstanceType: !Ref LinuxInstanceType
       AvailabilityZone: !Select
         - '0'
@@ -291,20 +300,20 @@ Resources:
           Value: !Join
             - '-'
             - - !Ref 'AWS::StackName'
-              - Falcon-Integration-Instance
+              - 'falcon-integration-gateway'
         - Key: CRWD_MANAGED
 
           Value: 'YES'
-        - Key: tag-accounting
+        - Key: cstag-accounting
 
           Value: !Ref Accounting
-        - Key: tag-business
+        - Key: cstag-business
 
           Value: !Ref Business
-        - Key: tag-department
+        - Key: cstag-department
 
           Value: !Ref Department
-        - Key: tag-owner
+        - Key: cstag-owner
 
           Value: !Ref Owner
   FigBootstrapInstanceProfile:
@@ -316,18 +325,10 @@ Resources:
   FigNetInt:
     Type: AWS::EC2::NetworkInterface
     Properties:
-      SubnetId: !Ref 'AttackerPublicSubnet'
+      SubnetId: !Ref 'JenkinsPrivateSubnet'
       GroupSet:
-        - !Ref 'AttackerSecurityGroup'
-  FigEIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-  AssociateFigEIP:
-    Type: AWS::EC2::EIPAssociation
-    Properties:
-      AllocationId: !GetAtt FigEIP.AllocationId
-      NetworkInterfaceId: !Ref 'FigNetInt'
+        - !GetAtt JenkinsVPC.DefaultSecurityGroup
+
   FigIAMRole:
     Type: AWS::IAM::Role
     Properties:
@@ -340,20 +341,112 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service: ec2.amazonaws.com
             Action: sts:AssumeRole
             Condition: { }
       Path: /
-      Policies:
-        - PolicyName: Get_Values
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: VisualEditor0
-                Effect: Allow
-                Action:
-                  - securityhub:*
-                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+
+  VulnTarget:
+    DependsOn:
+      - TriggerCTFBucketLambda
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref 'VulnNetInt'
+          DeviceIndex: '0'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          hostname -b ${AWS::StackName}-vuln
+          echo ${AWS::StackName}-vuln > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-vuln/g'
+          wget -O authorized_keys https://raw.githubusercontent.com/jshcodes/stuff/main/authorized_keys
+          mkdir /secret
+          wget -O /secret/devops-server-flag.txt https://raw.githubusercontent.com/jshcodes/stuff/main/vuln-flag.txt
+          cat authorized_keys >> /root/.ssh/authorized_keys
+          rm authorized_keys
+          echo '#!/bin/bash' >> /secret/upload_log
+          echo 'aws s3 rm s3://${AWS::StackName}-${S3Target}/lastlog' >> /secret/upload_log
+          echo 'aws s3 cp /secret/lastlog s3://${AWS::StackName}-${S3Target}/lastlog' >> /secret/upload_log
+          echo 'aws s3 ls s3://${AWS::StackName}-${S3Target}' >> /root/.bash_history
+          echo 'aws s3 ls s3://${AWS::StackName}-${S3Target}' >> /home/ec2-user/.bash_history
+      InstanceType: t2.micro
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref 'AvailabilityZones'
+      IamInstanceProfile: !Ref VulnBootstrapInstanceProfile
+      ImageId: !Ref 'LatestLinuxAMI'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'vuln'
+        - Key: CRWD_MANAGED
+          Value: 'YES'
+        - Key: demo-purpose
+          Value: Bastion
+        - Key: cstag-accounting
+          Value: !Ref Accounting
+        - Key: cstag-business
+          Value: !Ref Business
+        - Key: cstag-department
+          Value: !Ref Department
+        - Key: cstag-owner
+          Value: !Ref Owner
+  VulnNetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref 'JenkinsPrivateSubnet'
+      GroupSet:
+        - !GetAtt JenkinsVPC.DefaultSecurityGroup
+  VulnBootstrapInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'VulnIAMRole'
+  VulnIAMRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: !Join
+          - '-'
+          - - !Ref 'AWS::StackName'
+            - vuln-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: ec2.amazonaws.com
+              Action: sts:AssumeRole
+              Condition: { }
+        Path: /
+        ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        Policies:
+          - PolicyName: !Join
+              - '-'
+              - - !Ref 'AWS::StackName'
+                - vuln-server-s3-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: s3:List*
+                  Resource: "arn:aws:s3:::devdays35-target"
+                - Effect: Allow
+                  Action: s3:Get*
+                  Resource: "arn:aws:s3:::devdays35-target/*"
+
+
   FigQueue:
     Type: AWS::SQS::Queue
 
@@ -414,12 +507,48 @@ Resources:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
         - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+  AppFalconClientId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Falcon_ClientID
+      Type: String
+      Value: !Ref 'FalconClientId'
+      Description: Falcon Client ID for FIG connection
+  SSMFigClientId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: FIG_FALCON_CLIENT_ID
+      Type: String
+      Value: !Ref 'FalconClientId'
+      Description: Falcon Client ID for FIG connection
 
+  AppFalconClientSecret:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Falcon_Secret
+      Type: String
+      Value: !Ref 'FalconSecret'
+      Description: Falcon Client secret for FIG connection      
 
+  AppAgentActivationKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: AgentActivationKey
+      Type: String
+      Value: !Ref 'CCID'
+      Description: Agent Installation key          
+  
+  SSMFigClientSecret:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: FIG_FALCON_CLIENT_SECRET
+      Type: String
+      Value: !Ref 'FalconSecret'
+      Description: Falcon Client secret for FIG connection      
   SSMAppId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: app_id
+      Name: FIG_APP_ID
       Type: String
       Value: !Join
         - '-'
@@ -429,18 +558,18 @@ Resources:
   SSMFigSeverityThreshold:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: severity_threshold
+      Name: FIG_SEVERITY_THRESHOLD
       Type: String
-      Value: 3
-  SSMFigSQSQueueParma:
+      Value: "3"
+  SSMFigSQSQueueName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: sqs_queue_name
+      Name: FIG_SQS_QUEUE_NAME
       Type: String
       Value:
         Fn::GetAtt:
           - 'FigQueue'
-          - 'Arn'
+          - 'QueueName'
   JenkinsVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -626,20 +755,26 @@ Resources:
       Tags:
         - Key: Name
           PropagateAtLaunch: true
-          Value: 'Jenkins'
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'jenkins'
         - Key: CRWD_MANAGED
           PropagateAtLaunch: true
           Value: 'YES'
-        - Key: tag-accounting
+        - Key: demo-purpose
+          PropagateAtLaunch: true
+          Value: Jenkins
+        - Key: cstag-accounting
           PropagateAtLaunch: true
           Value: !Ref Accounting
-        - Key: tag-business
+        - Key: cstag-business
           PropagateAtLaunch: true
           Value: !Ref Business
-        - Key: tag-department
+        - Key: cstag-department
           PropagateAtLaunch: true
           Value: !Ref Department
-        - Key: tag-owner
+        - Key: cstag-owner
           PropagateAtLaunch: true
           Value: !Ref Owner
       TargetGroupARNs:
@@ -653,8 +788,9 @@ Resources:
       ImageId: !Ref 'LatestLinuxAMI'
       SecurityGroups:
         - !Ref 'JenkinsServerSecurityGroup'
+        - !GetAtt JenkinsVPC.DefaultSecurityGroup
       IamInstanceProfile: !Ref JenkinsBootstrapInstanceProfile
-      InstanceType: m4.large
+      InstanceType: t2.large
       UserData:
         Fn::Base64: !Sub |
           #! /bin/bash
@@ -662,12 +798,15 @@ Resources:
           # Added ssm role
           export REGION=${AWS::Region}
           exec > /tmp/part-001.log 2>&1
+          hostname -b ${AWS::StackName}-jenkins
+          echo ${AWS::StackName}-jenkins > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-jenkins/g'
           sudo cd /var/tmp
-          sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_webserver_aws_ami.sh
+          sudo wget -O initialize_webserver_aws_ami.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_webserver_aws_ami.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_webserver_aws_ami.sh
           sudo chmod 755 dns-exfil.sh
-          sudo bash ./initialize_webserver_aws_ami.sh
+          sudo bash ./initialize_webserver_aws_ami.sh -t ${VulnTarget.PrivateIp}
 
   JenkinsBootstrapRole:
     Type: AWS::IAM::Role
@@ -681,7 +820,10 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: JenkinslBootstrapRolePolicy
+        - PolicyName: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - JenkinslBootstrapRolePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -862,7 +1004,10 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: JenkinslBootstrapRolePolicy
+        - PolicyName: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - JenkinslBootstrapRolePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -1040,10 +1185,89 @@ Resources:
       Runtime: python3.7
       Timeout: 60
 
+  TriggerCTFBucketLambda:
+    Type: 'Custom::TriggerLambda'
+    Properties:
+      ServiceToken: !GetAtt 'CreateCTFBucket.Arn'
+
+  CreateCTFBucket:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          s3_source_bucket: !Ref S3Bucket
+          s3_destination_bucket: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - !Ref S3Target
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: create_ctf_bucket.zip
+      Layers:
+        - !Ref lambdaLayer
+      Handler: create_ctf_bucket.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt ctfbucketLambdaRole.Arn
+      Runtime: python3.7
+      Timeout: 60
+
+  ctfbucketLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - LambdaRoleToSetupSSM4
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: Get_Values
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: "*"
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                - s3:GetObjectAcl
+                - s3:GetObject
+                - s3:DeleteObjectVersion
+                - s3:DeleteObject
+                - s3:GetObjectVersion
+                Resource: arn:aws:s3:::*/*
+              - Sid: VisualEditor1
+                Effect: Allow
+                Action:
+                - s3:ListBucketVersions
+                - s3:CreateBucket
+                - s3:ListBucket
+                - s3:GetBucketVersioning
+                - s3:GetBucketAcl
+                - s3:DeleteBucket
+                - s3:GetBucketPolicy
+                Resource: arn:aws:s3:::*
+              - Sid: VisualEditor2
+                Effect: Allow
+                Action: s3:ListAllMyBuckets
+                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+
   ssmsetupLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: LambdaRoleToSetupSSM4
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - LambdaRoleToSetupSSM4
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -1109,12 +1333,17 @@ Resources:
           export LOG_GROUP=${LogGroup}
           EOF
           sudo cd /var/tmp
-          sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/initialize_attacker_aws_ami.sh
+          hostname -b ${AWS::StackName}-attacker
+          echo ${AWS::StackName}-attacker > /etc/hostname
+          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-attacker/g'
+          sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_attacker_aws_ami.sh
+          sudo wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo chmod 755 initialize_attacker.sh
           sudo chmod 755 dns-exfil.sh
+          sudo chmod +x /usr/local/bin/start-exercise
           sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
-      InstanceType: m4.large
+      InstanceType: t2.large
       AvailabilityZone: !Select
         - '0'
         - !Ref 'AvailabilityZones'
@@ -1122,25 +1351,30 @@ Resources:
       ImageId: !Ref 'LatestLinuxAMI'
       Tags:
         - Key: Name
-          Value: 'Attacker'
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'attacker'
         - Key: CRWD_MANAGED
           Value: 'YES'
-        - Key: tag-accounting
+        - Key: demo-purpose
+          Value: Attacker
+        - Key: cstag-accounting
           Value: !Ref Accounting
-        - Key: tag-business
+        - Key: cstag-business
           Value: !Ref Business
-        - Key: tag-department
+        - Key: cstag-department
           Value: !Ref Department
-        - Key: tag-owner
+        - Key: cstag-owner
           Value: !Ref Owner
 
   PublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: !Join
-        - ''
+        - '-'
         - - !Ref 'AWS::StackName'
-          - Jenkins-ALB
+          - ALB
       SecurityGroups:
         - !Ref 'PublicLoadBalancerSecurityGroup'
       Subnets:
