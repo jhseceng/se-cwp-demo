@@ -5,6 +5,7 @@ import time
 # from functools import cached_property
 import boto3
 import requests
+
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
@@ -150,24 +151,24 @@ def delete_ctf_bucket(bucket):
     CTFBucket.delete_bucket(bucket)
 
 
-def cfnresponse_send(event, context, responseStatus, responseData, physicalResourceId=None, noEcho=False):
+def cfnresponse_send(event, context, responseStatus, responseData, physicalResourceId='', noEcho=False):
     responseUrl = event['ResponseURL']
-    logger.info('Got response {} {} {} {}'.format(event, context, responseStatus, responseData))
+
     print(responseUrl)
 
-    responseBody = {'Status': responseStatus,
-                    'Reason': 'See the details in CloudWatch Log Stream: ' + context.log_stream_name,
-                    'PhysicalResourceId': physicalResourceId or context.log_stream_name, 'StackId': event['StackId'],
-                    'RequestId': event['RequestId'], 'LogicalResourceId': event['LogicalResourceId'], 'NoEcho': noEcho,
-                    'Data': responseData}
+    responseBody = {'Status': responseStatus, 'StackId': event['StackId'],
+                    'PhysicalResourceId': str(event['ServiceToken']), 'RequestId': event['RequestId'], 'NoEcho': noEcho,
+                    'LogicalResourceId': event['LogicalResourceId'], 'Data': responseData}
 
     json_responseBody = json.dumps(responseBody)
 
     print("Response body:\n" + json_responseBody)
+    logger.info('Response body:\n {}'.format(responseBody))
+    logger.info('PhysicalResourceId {}'.format(responseBody['PhysicalResourceId']))
 
     headers = {
-        'content-type': '',
-        'content-length': str(len(json_responseBody))
+        'content-type' : '',
+        'content-length' : str(len(json_responseBody))
     }
 
     try:
@@ -181,35 +182,36 @@ def cfnresponse_send(event, context, responseStatus, responseData, physicalResou
 
 def lambda_handler(event, context):
     logger.info('Got event {}'.format(event))
-    response_data = {}
+    logger.info('Context {}'.format(context))
+    logger.info('Context.log_stream_name {}'.format(context.log_stream_name))
+    logger.info('Context type {}'.format(type(context)))
+    responseData = {}
     if event['RequestType'] in ['Create']:
         logger.info('Event = ' + event['RequestType'])
 
         if create_ctf_bucket(s3_destination_bucket):
             CRWD_Discover_result = 'Success'
             logger.info('sending cfn success')
-            cfnresponse_send(event, context, SUCCESS, CRWD_Discover_result)
+            cfnresponse_send(event, context, SUCCESS, responseData)
             return
         else:
             CRWD_Discover_result = 'Failed'
-            cfnresponse_send(event, context, FAILED, CRWD_Discover_result)
+            cfnresponse_send(event, context, SUCCESS, responseData)
             return
     elif event['RequestType'] in ['Update']:
         logger.info('Event = ' + event['RequestType'])
-
-        cfnresponse_send(event, context, 'SUCCESS', response_data)
+        cfnresponse_send(event, context, SUCCESS, responseData)
         return
     elif event['RequestType'] in ['Delete']:
         delete_ctf_bucket(s3_destination_bucket)
         logger.info('Event = ' + event['RequestType'])
-        response_data["Status"] = "Success"
-        cfnresponse_send(event, context, 'SUCCESS', response_data)
+        cfnresponse_send(event, context, SUCCESS, responseData)
         return
 
 
 if __name__ == '__main__':
     event = {
-        "RequestType": "Delete",
+        "RequestType": "Create",
         "ServiceToken": "arn:aws:lambda:us-east-2:517716713836:function:devdays10-CreateSSMDocument-14YFU5VEOMO12",
         "ResponseURL": "https:\/\/cloudformation-custom-resource-response-useast2.s3.us-east-2.amazonaws.com\/arn%3Aaws%3Acloudformation%3Aus-east-2%3A517716713836%3Astack\/devdays10\/0582c230-0412-11eb-af35-0a88c1bcd424%7CTriggerLambda%7Cfd9e5caa-a2c8-4f3b-a7d8-71767f00fb24?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20201001T182718Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIAVRFIPK6PJGXMVAWW%2F20201001%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Signature=49ab44a3e5cfdfc3392429576e14f6bab2d61cb3f1113735ffba0c7d001ea533",
         "StackId": "arn:aws:cloudformation:us-east-2:517716713836:stack\/devdays10\/0582c230-0412-11eb-af35-0a88c1bcd424",
