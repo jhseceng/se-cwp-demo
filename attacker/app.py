@@ -120,7 +120,7 @@ def ssm_install_command(action: str, document_name: str, instance_ids: list, par
         res.headers['Content-type'] = 'application/json'
     except Exception as e:
         logger.info('Got Exception {}'.format(e))
-        data = {"Result": "Request format not json"}
+        data = {"Result": "Error: {}".format(e)}
     return data
 
 
@@ -352,7 +352,7 @@ def get_exploit_db():
 def show_managed_instances():
     auth_token = ''
     auth_header = ''
-    tag_name = 'Name'
+    tag_name = 'demo-purpose'
     tag_values = ['Jenkins', 'Attacker', 'Bastion']
 
     try:
@@ -370,7 +370,10 @@ def show_managed_instances():
             falcon_aid = ''
             host_query_filter = "platform_name: 'Linux' + instance_id: '" + instance['AWS InstanceId'] + "'"
             fc = {"Criterion": {"resource.instanceDetails.instanceId": {"Eq": [instance['AWS InstanceId']]}}}
-            guard_duty_findings = "Yes" if len(get_findings(fc)['FindingIds']) > 0 else "No"
+            try:
+                guard_duty_findings = "Yes" if len(get_findings(fc)['FindingIds']) > 0 else "No"
+            except:
+                guard_duty_findings = "No"
 
             falcon_aid = query_falcon_host(auth_header, host_query_filter)
             if falcon_aid:
@@ -538,7 +541,7 @@ def launch_phase2():
 @app.route("/launch_phase3", methods=['GET'])
 def launch_phase3():
     if request.method == 'GET':
-        tag_name = 'Name'
+        tag_name = 'demo-purpose'
         tag_values = ['Jenkins', 'Attacker', 'Bastion']
         instance_list = []
         managed_instances =[]

