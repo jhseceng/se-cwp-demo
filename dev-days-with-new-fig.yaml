@@ -251,7 +251,7 @@ Parameters:
   S3Target:
     Type: String
     Description: Target bucket for S3 lateral attack demonstration
-    Default: devdays35-target
+    Default: targetbkt
 
 
 Mappings:
