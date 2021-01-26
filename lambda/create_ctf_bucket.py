@@ -2,7 +2,7 @@ import logging
 import os
 import json
 import time
-from functools import cached_property
+# from functools import cached_property
 import boto3
 import requests
 from botocore.exceptions import ClientError
@@ -15,14 +15,15 @@ FAILED = "FAILED"
 
 region = os.environ['AWS_REGION']
 
-s3_source_bucket = os.environ['s3_source_bucket']
+
 s3_destination_bucket = os.environ['s3_destination_bucket']
-s3_object = os.environ['s3_object']
+
 
 
 class S3BucketHandler:
     def __init__(self, region_name):
         self.region = region_name
+        self.client = boto3.client('s3', region_name=self.region)
 
     def update(self, bucket_name, files):
         if not self._bucket_exists(bucket_name):
@@ -39,18 +40,18 @@ class S3BucketHandler:
             return self._create_bucket(bucket_name)
 
     def delete_objects(self, bucket_name):
-        response = self._client.list_objects_v2(Bucket=bucket_name)
+        response = self.client.list_objects_v2(Bucket=bucket_name)
         try:
             if response.get('Contents'):
                 for s3_object in response['Contents']:
                     logger.info('Deleting {}'.format(s3_object['Key']))
-                    self._client.delete_object(Bucket=bucket_name, Key=s3_object['Key'])
+                    self.client.delete_object(Bucket=bucket_name, Key=s3_object['Key'])
                 return True
         except Exception as e:
             logger.info('Got exception {} deleting files in bucket {}'.format(e, bucket_name))
 
     def delete_bucket(self, bucket_name):
-        res = self._client.delete_bucket(Bucket=bucket_name)
+        res = self.client.delete_bucket(Bucket=bucket_name)
         logger.info('Got result {}'.format(res))
         if res['ResponseMetadata']['HTTPStatusCode'] == 200:
             return True
@@ -62,7 +63,7 @@ class S3BucketHandler:
         copy_source_object = {'Bucket': source_bucket, 'Key': s3_file}
 
         # S3 copy object operation
-        self._client.copy_object(CopySource=copy_source_object, Bucket=destination_bucket, Key=s3_file)
+        self.client.copy_object(CopySource=copy_source_object, Bucket=destination_bucket, Key=s3_file)
         return True
 
     def _bucket_exists(self, bucket_name):
@@ -72,7 +73,7 @@ class S3BucketHandler:
         :return: True or False
         """
         try:
-            response = self._client.list_buckets()
+            response = self.client.list_buckets()
         except ClientError as e:
             print('Error listing buckets {}'.format(e))
 
@@ -94,7 +95,7 @@ class S3BucketHandler:
         print('Creating bucket:')
         location = {'LocationConstraint': self.region}
         try:
-            result = self._client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
+            result = self.client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
             if result['ResponseMetadata']['HTTPStatusCode'] == 200:
                 return True
             else:
@@ -118,7 +119,7 @@ class S3BucketHandler:
             start_time = time.time()
             print('Uploading file {}:'.format(file_name))
             content = open(file_name, 'rb')
-            self._client.put_object(
+            self.client.put_object(
                 Bucket=bucket,
                 Key=object_name,
                 Body=content
@@ -130,7 +131,7 @@ class S3BucketHandler:
             return False
         return True
 
-    @cached_property
+    # @cached_property
     def _client(self):
         return boto3.client('s3', region_name=self.region)
 
