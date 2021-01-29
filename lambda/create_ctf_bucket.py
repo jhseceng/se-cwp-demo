@@ -97,7 +97,10 @@ class S3BucketHandler:
         print('Creating bucket:')
         location = {'LocationConstraint': self.region}
         try:
-            result = self.client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
+            if self.region == "us-east-1":
+                result = self.client.create_bucket(Bucket=bucket_name)                
+            else:
+                result = self.client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
             if result['ResponseMetadata']['HTTPStatusCode'] == 200:
                 return True
             else:
