@@ -15,7 +15,6 @@ APISECRET=$(aws ssm get-parameter --name Falcon_Secret --query 'Parameter.Value'
 #Get AID and remove local files to cleanup
 echo 'Getting the AID for the instance'
 aid=$(sudo /opt/CrowdStrike/falconctl -g --aid | awk -F\" '{print $2}')
-sudo yum -y remove falcon-sensor
 
 #With AID and API keys, delete host on Crowdstrike console
 #Get OAuth2 Token
@@ -29,6 +28,10 @@ aid_status=$(curl -X GET "https://api.crowdstrike.com/devices/entities/devices/v
 # Delete with AID
 echo "Now deleting the host on Falcon Console"
 aid_delete=$(curl -X POST "https://api.crowdstrike.com/devices/entities/devices-actions/v2?action_name=hide_host" -H "accept: application/json" -H "authorization: bearer ""$TOKEN" -H "Content-Type: application/json" -d "{ \"action_parameters\": [ { \"name\": \"string\", \"value\": \"string\" } ], \"ids\": [ \"$aid\" ]}")
+
+#Remove agent
+echo "Removing agent"
+sudo yum -y remove falcon-sensor
 
 echo "Uninstall complete"
 
