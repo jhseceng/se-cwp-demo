@@ -246,11 +246,11 @@ Parameters:
     Default: t2.small
   FigFileName:
     Type: String
-    Description: The version of the FIG that you wish to install.
+    Description: The version of the Falcon Integration Gateway that you wish to install.
     Default: fig-2.0.latest-install.run
   S3Target:
     Type: String
-    Description: Target bucket for S3 lateral attack demonstration
+    Description: Target bucket name for S3 lateral attack demonstration
     Default: targetbkt
 
 
@@ -266,6 +266,39 @@ Mappings:
       NAME: aws-dev-days-crowdstrike-eu-west-1
     ap-southeast-2:
       NAME: aws-dev-days-crowdstrike-ap-southeast-2
+  AMIRegionMap:
+    eu-north-1:
+      AMZNLINUX2: ami-0b26bf4b43c8d995d
+    ap-south-1:
+      AMZNLINUX2: ami-026669ec456129a70
+    eu-west-3:
+      AMZNLINUX2: ami-0c3d23d707737957d
+    eu-west-2:
+      AMZNLINUX2: ami-0271d331ac7dab654
+    eu-west-1:
+      AMZNLINUX2: ami-014ce76919b528bff
+    ap-northeast-2:
+      AMZNLINUX2: ami-06f3207f56dc1ca18
+    ap-northeast-1:
+      AMZNLINUX2: ami-034968955444c1fd9
+    sa-east-1:
+      AMZNLINUX2: ami-08f7f9fcedda2e070
+    ca-central-1:
+      AMZNLINUX2: ami-0c9bfc21ac5bf10eb
+    ap-southeast-1:
+      AMZNLINUX2: ami-03faaf9cde2b38e9f
+    ap-southeast-2:
+      AMZNLINUX2: ami-076e39b6b14e3bb20
+    eu-central-1:
+      AMZNLINUX2: ami-0649a2ac1437cf3b7
+    us-east-1:
+      AMZNLINUX2: ami-04bf6dcdc9ab498ca
+    us-east-2:
+      AMZNLINUX2: ami-0b0f4c27376f8aa79
+    us-west-1:
+      AMZNLINUX2: ami-000279759c4819ddf
+    us-west-2:
+      AMZNLINUX2: ami-07a0da1997b55b23e
 
 Resources:
   #
@@ -294,7 +327,11 @@ Resources:
         - '0'
         - !Ref 'AvailabilityZones'
       IamInstanceProfile: !Ref FigBootstrapInstanceProfile
-      ImageId: !Ref 'LatestLinuxAMI'
+#      ImageId: !Ref 'LatestLinuxAMI'
+      ImageId: !FindInMap
+        - AMIRegionMap
+        - !Ref 'AWS::Region'
+        - AMZNLINUX2
       Tags:
         - Key: Name
           Value: !Join
@@ -381,7 +418,11 @@ Resources:
         - '0'
         - !Ref 'AvailabilityZones'
       IamInstanceProfile: !Ref VulnBootstrapInstanceProfile
-      ImageId: !Ref 'LatestLinuxAMI'
+#      ImageId: !Ref 'LatestLinuxAMI'
+      ImageId: !FindInMap
+        - AMIRegionMap
+        - !Ref 'AWS::Region'
+        - AMZNLINUX2
       Tags:
         - Key: Name
           Value: !Join
@@ -513,12 +554,30 @@ Resources:
               - Sid: VisualEditor0
                 Effect: Allow
                 Action:
+                  - ssm:GetParametersByPath
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: '*'
+              - Sid: VisualEditor1
+                Effect: Allow
+                Action:
                   - securityhub:*
                 Resource: '*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
         - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+
+  FigQueueTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    DependsOn:
+      - LogGroup
+    Properties:
+      BatchSize: 1
+      Enabled: true
+      EventSourceArn: !GetAtt FigQueue.Arn
+      FunctionName: !Ref 'CRWDFigIdentifyDetection'
+
   AppFalconClientId:
     Type: AWS::SSM::Parameter
     Properties:
@@ -797,7 +856,11 @@ Resources:
       Comment: Install a simple application
     Properties:
       KeyName: !Ref 'KeyPairName'
-      ImageId: !Ref 'LatestLinuxAMI'
+#      ImageId: !Ref 'LatestLinuxAMI'
+      ImageId: !FindInMap
+        - AMIRegionMap
+        - !Ref 'AWS::Region'
+        - AMZNLINUX2
       SecurityGroups:
         - !Ref 'JenkinsServerSecurityGroup'
         - !GetAtt JenkinsVPC.DefaultSecurityGroup
@@ -1361,7 +1424,11 @@ Resources:
         - '0'
         - !Ref 'AvailabilityZones'
       IamInstanceProfile: !Ref AttackerBootstrapInstanceProfile
-      ImageId: !Ref 'LatestLinuxAMI'
+#      ImageId: !Ref 'LatestLinuxAMI'
+      ImageId: !FindInMap
+        - AMIRegionMap
+        - !Ref 'AWS::Region'
+        - AMZNLINUX2
       Tags:
         - Key: Name
           Value: !Join
