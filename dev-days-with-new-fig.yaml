@@ -856,7 +856,6 @@ Resources:
       Comment: Install a simple application
     Properties:
       KeyName: !Ref 'KeyPairName'
-#      ImageId: !Ref 'LatestLinuxAMI'
       ImageId: !FindInMap
         - AMIRegionMap
         - !Ref 'AWS::Region'
@@ -1412,11 +1411,16 @@ Resources:
           hostname -b ${AWS::StackName}-attacker
           echo ${AWS::StackName}-attacker > /etc/hostname
           cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-attacker/g'
+          sudo yum install nmap -y
           sudo wget -O initialize_attacker.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_attacker_aws_ami.sh
           sudo wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
+          sudo wget -O /home/ec2-user/.searchsploit_rc https://raw.githubusercontent.com/jshcodes/stuff/main/ss.rc
           sudo chmod 755 initialize_attacker.sh
           sudo chmod 755 dns-exfil.sh
+          sudo git clone https://github.com/offensive-security/exploitdb.git /opt/exploit-database
+          sudo ln -sf /opt/exploit-database/searchsploit /usr/local/bin/searchsploit
+          sudo chown ec2-user:ec2-user /home/ec2-user/.searchsploit_rc
           sudo chmod +x /usr/local/bin/start-exercise
           sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
       InstanceType: t2.large
@@ -1424,7 +1428,6 @@ Resources:
         - '0'
         - !Ref 'AvailabilityZones'
       IamInstanceProfile: !Ref AttackerBootstrapInstanceProfile
-#      ImageId: !Ref 'LatestLinuxAMI'
       ImageId: !FindInMap
         - AMIRegionMap
         - !Ref 'AWS::Region'
