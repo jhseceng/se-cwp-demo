@@ -1,2 +1,2 @@
 #!/bin/bash
-aws ec2 describe-instances --query "Reservations[*].Instances[*].{Name: Tags[?Key=='demo-purpose'] | [0].Value, InstanceID: InstanceId}" --region $REGION --output table
+aws ec2 describe-instances --query "Reservations[*].Instances[*].{Name: Tags[?Key=='demo-purpose'] | [0].Value, InstanceID: InstanceId}" --filter "Name=instance-state-name,Values=running" --region $REGION --output table
