@@ -327,7 +327,6 @@ Resources:
         - '0'
         - !Ref 'AvailabilityZones'
       IamInstanceProfile: !Ref FigBootstrapInstanceProfile
-#      ImageId: !Ref 'LatestLinuxAMI'
       ImageId: !FindInMap
         - AMIRegionMap
         - !Ref 'AWS::Region'
@@ -339,20 +338,17 @@ Resources:
             - - !Ref 'AWS::StackName'
               - 'falcon-integration-gateway'
         - Key: CRWD_MANAGED
-
           Value: 'YES'
         - Key: cstag-accounting
-
           Value: !Ref Accounting
         - Key: cstag-business
-
           Value: !Ref Business
         - Key: cstag-department
-
           Value: !Ref Department
         - Key: cstag-owner
-
           Value: !Ref Owner
+        - Key: demo-purpose
+          Value: FIG
   FigBootstrapInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -418,7 +414,6 @@ Resources:
         - '0'
         - !Ref 'AvailabilityZones'
       IamInstanceProfile: !Ref VulnBootstrapInstanceProfile
-#      ImageId: !Ref 'LatestLinuxAMI'
       ImageId: !FindInMap
         - AMIRegionMap
         - !Ref 'AWS::Region'
@@ -1416,12 +1411,18 @@ Resources:
           sudo wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           sudo wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           sudo wget -O /home/ec2-user/.searchsploit_rc https://raw.githubusercontent.com/jshcodes/stuff/main/ss.rc
+          sudo wget -O /usr/local/bin/list-instances https://raw.githubusercontent.com/jshcodes/stuff/main/list-instances.sh
+          sudo wget -O /usr/local/bin/install-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/install-sensor.sh
+          sudo wget -O /usr/local/bin/remove-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/remove-sensor.sh
           sudo chmod 755 initialize_attacker.sh
           sudo chmod 755 dns-exfil.sh
           sudo git clone https://github.com/offensive-security/exploitdb.git /opt/exploit-database
           sudo ln -sf /opt/exploit-database/searchsploit /usr/local/bin/searchsploit
           sudo chown ec2-user:ec2-user /home/ec2-user/.searchsploit_rc
           sudo chmod +x /usr/local/bin/start-exercise
+          sudo chmod +x /usr/local/bin/install-sensor
+          sudo chmod +x /usr/local/bin/remove-sensor
+          sudo chmod +x /usr/local/bin/list-instances
           sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
       InstanceType: t2.large
       AvailabilityZone: !Select
