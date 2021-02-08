@@ -1406,7 +1406,6 @@ Resources:
           hostname -b ${AWS::StackName}-attacker
           echo ${AWS::StackName}-attacker > /etc/hostname
           cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-attacker/g'
-          yum install nmap -y
           wget -O initialize_attacker.sh https://raw.githubusercontent.com/jshcodes/stuff/main/initialize_attacker_aws_ami.sh
           wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
@@ -1422,8 +1421,8 @@ Resources:
           chmod +x /usr/local/bin/install-sensor
           chmod +x /usr/local/bin/remove-sensor
           chmod +x /usr/local/bin/list-instances
-          bash ./install-ss.sh
           bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
+          bash ./install-ss.sh
       InstanceType: t2.large
       AvailabilityZone: !Select
         - '0'
