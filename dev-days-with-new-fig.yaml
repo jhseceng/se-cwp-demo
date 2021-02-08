@@ -1414,15 +1414,15 @@ Resources:
           sudo wget -O /usr/local/bin/list-instances https://raw.githubusercontent.com/jshcodes/stuff/main/list-instances.sh
           sudo wget -O /usr/local/bin/install-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/install-sensor.sh
           sudo wget -O /usr/local/bin/remove-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/remove-sensor.sh
+          sudo wget -O install-ss.sh https://raw.githubusercontent.com/jshcodes/stuff/main/install-ss.sh
           sudo chmod 755 initialize_attacker.sh
           sudo chmod 755 dns-exfil.sh
-          sudo git clone https://github.com/offensive-security/exploitdb.git /opt/exploit-database
-          sudo ln -sf /opt/exploit-database/searchsploit /usr/local/bin/searchsploit
-          sudo chown ec2-user:ec2-user /home/ec2-user/.searchsploit_rc
+          sudo chmod 755 install-ss.sh
           sudo chmod +x /usr/local/bin/start-exercise
           sudo chmod +x /usr/local/bin/install-sensor
           sudo chmod +x /usr/local/bin/remove-sensor
           sudo chmod +x /usr/local/bin/list-instances
+          sudo bash ./install-ss.sh
           sudo bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
       InstanceType: t2.large
       AvailabilityZone: !Select
