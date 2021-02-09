@@ -9,10 +9,9 @@ aws configure set region $REGION
 echo 'Getting CID'
 cid=`aws ssm get-parameter --name AgentActivationKey --query 'Parameter.Value' --output text`
 
-
-#sudo docker-compose down
+cp /var/tmp/docker-compose.yml .
+docker-compose down
 yum install falcon-sensor-6.12.0-10912.amzn2.x86_64.rpm -y
 /opt/CrowdStrike/falconctl -s --cid=$cid
 service falcon-sensor start
-
-#sudo docker-compose up -d
+docker-compose up -d
