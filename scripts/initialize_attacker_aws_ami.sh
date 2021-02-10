@@ -25,7 +25,7 @@ done
 ATTACKER=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
 echo "$ATTACKER"
 sudo yum update -y
-sudo yum install -y python3-pip python3 python3-setuptools build-essential libssl-dev libffi-dev git nmap
+sudo yum install -y python3-pip python3 python3-setuptools build-essential libssl-dev libffi-dev git nmap jq
 sudo amazon-linux-extras install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
