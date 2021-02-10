@@ -1414,6 +1414,7 @@ Resources:
           wget -O /usr/local/bin/install-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/install-sensor.sh
           wget -O /usr/local/bin/remove-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/remove-sensor.sh
           wget -O /usr/local/bin/exec-cmd https://raw.githubusercontent.com/jshcodes/stuff/main/exec-cmd.sh
+          wget -O /usr/local/bin/restart-jenkins-container https://raw.githubusercontent.com/jshcodes/stuff/main/restart-jenkins-container.sh
           wget -O install-ss.sh https://raw.githubusercontent.com/jshcodes/stuff/main/install-ss.sh
           chmod 755 *.sh
           chmod +x /usr/local/bin/*
