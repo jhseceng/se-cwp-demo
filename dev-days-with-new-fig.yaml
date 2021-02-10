@@ -1413,14 +1413,10 @@ Resources:
           wget -O /usr/local/bin/list-instances https://raw.githubusercontent.com/jshcodes/stuff/main/list-instances.sh
           wget -O /usr/local/bin/install-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/install-sensor.sh
           wget -O /usr/local/bin/remove-sensor https://raw.githubusercontent.com/jshcodes/stuff/main/remove-sensor.sh
+          wget -O /usr/local/bin/exec-cmd https://raw.githubusercontent.com/jshcodes/stuff/main/exec-cmd.sh
           wget -O install-ss.sh https://raw.githubusercontent.com/jshcodes/stuff/main/install-ss.sh
-          chmod 755 initialize_attacker.sh
-          chmod 755 dns-exfil.sh
-          chmod 755 install-ss.sh
-          chmod +x /usr/local/bin/start-exercise
-          chmod +x /usr/local/bin/install-sensor
-          chmod +x /usr/local/bin/remove-sensor
-          chmod +x /usr/local/bin/list-instances
+          chmod 755 *.sh
+          chmod +x /usr/local/bin/*
           bash ./initialize_attacker.sh -v ${PublicLoadBalancer.DNSName} -r ${AWS::Region} -l ${LogGroup}
           bash ./install-ss.sh
       InstanceType: t2.large
