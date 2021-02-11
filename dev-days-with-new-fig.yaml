@@ -36,7 +36,7 @@ Metadata:
       - Label:
           default: Amazon EC2 Configuration
         Parameters:
-          - KeyPairName
+          - EEKeyPair
       - Label:
           default: WAF Implementation
         Parameters:
@@ -54,7 +54,7 @@ Metadata:
     ParameterLabels:
       AvailabilityZones:
         default: Availability Zones
-      KeyPairName:
+      EEKeyPair:
         default: Key Pair Name
       PrivateSubnetCIDR:
         default: Private Subnet CIDR
@@ -90,18 +90,18 @@ Parameters:
   CCID:
     Description: CrowdStrike Customer ID
     Type: String
-    NoEcho: 'true'
-    Default: "797BCD0BF5AE4F39A2B770FF52517125-08"
+    NoEcho: true
+    Default: ""
   FalconClientId:
     Description: Falcon OAuth2 Client ID.
     Type: String
-    NoEcho: 'true'
-    Default: '641dc606e230483e9678de95f8edf8ee'
+    NoEcho: true
+    Default: ""
   FalconSecret:
     Description: Falcon Oath2 API secret.
     Type: String
-    NoEcho: 'true'
-    Default: 'y5f4N91i2Dg38Z6xhV7KuedOFtvz0wTnURpsomIr'
+    NoEcho: true
+    Default: ""
   Owner:
     Type: String
     Description: Owner/Creator of resource
@@ -184,7 +184,7 @@ Parameters:
     Description: Availability Zone to use for the subnets in the VPC. You should select
       two so that we can deploy the ALB, but we just use 1 (the first).
     Type: List<AWS::EC2::AvailabilityZone::Name>
-  KeyPairName:
+  EEKeyPair:
     Description: Public/private key pairs allow you to securely connect to your instance
       after it launches
     Type: AWS::EC2::KeyPair::KeyName
@@ -307,7 +307,7 @@ Resources:
   Fig:
     Type: AWS::EC2::Instance
     Properties:
-      KeyName: !Ref 'KeyPairName'
+      KeyName: !Ref 'EEKeyPair'
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref 'FigNetInt'
           DeviceIndex: '0'
@@ -383,13 +383,29 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
+  #Enable GuardDuty
+  GDdetector:
+    Type: "AWS::GuardDuty::Detector"
+    Properties:
+      Enable: true
+      FindingPublishingFrequency: "FIFTEEN_MINUTES"
+      
+  #Enable SecurityHub
+  RegionSecurityHub:
+    Type: 'AWS::SecurityHub::Hub'
+    Properties:
+      Tags:
+        cstag-accounting: !Ref Accounting
+        cstag-business: !Ref Business
+        cstag-department: !Ref Department
+        cstag-owner: !Ref Owner      
 
   VulnTarget:
     DependsOn:
       - TriggerCTFBucketLambda
     Type: AWS::EC2::Instance
     Properties:
-      KeyName: !Ref 'KeyPairName'
+      KeyName: !Ref 'EEKeyPair'
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref 'VulnNetInt'
           DeviceIndex: '0'
@@ -850,7 +866,7 @@ Resources:
     Metadata:
       Comment: Install a simple application
     Properties:
-      KeyName: !Ref 'KeyPairName'
+      KeyName: !Ref 'EEKeyPair'
       ImageId: !FindInMap
         - AMIRegionMap
         - !Ref 'AWS::Region'
@@ -1385,7 +1401,7 @@ Resources:
   Attacker:
     Type: AWS::EC2::Instance
     Properties:
-      KeyName: !Ref 'KeyPairName'
+      KeyName: !Ref 'EEKeyPair'
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref 'AttackerNetInt'
           DeviceIndex: '0'
@@ -2043,6 +2059,10 @@ Outputs:
   AttackerIp:
     Description: Local IP for RedTeam Instance
     Value: !Ref 'AttackerEIP'
+
+  SecurityHubArn:
+    Description: ARN for the environment SecurityHub
+    Value: !Ref RegionSecurityHub
 
   VPCFlowLogGroup:
     Description: Name of VPC Flow log group
