@@ -91,17 +91,17 @@ Parameters:
     Description: CrowdStrike Customer ID
     Type: String
     NoEcho: true
-    Default: ""
+    Default: "4006250dd94644e58b748501a9071b0f-e1"
   FalconClientId:
     Description: Falcon OAuth2 Client ID.
     Type: String
     NoEcho: true
-    Default: ""
+    Default: "4b21d716dd3f48f5a157ad19933fab6a"
   FalconSecret:
     Description: Falcon Oath2 API secret.
     Type: String
     NoEcho: true
-    Default: ""
+    Default: "w98yEd7kM2Gv0jHArBzetXu1ix5WaZ34Y6nKRDsV"
   Owner:
     Type: String
     Description: Owner/Creator of resource
