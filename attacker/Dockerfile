@@ -39,7 +39,7 @@ RUN pip3 install requests Flask pexpect Flask-WTF python-nmap boto3
 
 #RUN cp autosploit.sh /root/auto-sploit.sh
 #
-#RUN chmod +x /root/auto-sploit.sh
+RUN chmod +x /root/auto-sploit.sh
 
 USER root
 
