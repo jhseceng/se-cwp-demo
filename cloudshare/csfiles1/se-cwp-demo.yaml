@@ -1535,7 +1535,7 @@ Resources:
           hostname -b ${AWS::StackName}-attacker
           echo ${AWS::StackName}-attacker > /etc/hostname
           cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-attacker/g'
-          wget -O initialize_attacker.sh https://raw.githubusercontent.com/jhseceng/se-cwp-demo/master/build/initialize_attacker_se_cwp_demo.sh
+          wget -O initialize_attacker.sh https://raw.githubusercontent.com/jhseceng/se-cwp-demo/master/build/initialize-attacker-se-cwp-demo.sh
           wget -O /usr/local/bin/start-exercise https://raw.githubusercontent.com/jshcodes/stuff/main/start-exercise.sh
           wget -O dns-exfil.sh https://raw.githubusercontent.com/jhseceng/devdays/master/scripts/dns-exfil.sh
           wget -O /home/ec2-user/.searchsploit_rc https://raw.githubusercontent.com/jshcodes/stuff/main/ss.rc
