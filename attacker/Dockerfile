@@ -1,7 +1,8 @@
 FROM openjdk:8-jdk
 
 MAINTAINER justin-harris
-
+#    && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/exploit.py -O ~/exploit.py -q --progress=bar:force:noscroll --show-progress  \
+#    && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/auto-sploit.sh -O ~/auto-sploit.sh -q --progress=bar:force:noscroll --show-progress \
 RUN apt-get update && apt-get install -y git curl wget netcat nmap net-tools dnsutils sudo python3 python3-pip && rm -rf /var/lib/apt/lists/*
 
 RUN echo 'root:crowdstrike' | chpasswd
@@ -18,8 +19,6 @@ RUN set -ex \
     && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/ezmorph-1.0.6.jar -O ~/ezmorph-1.0.6.jar -q --progress=bar:force:noscroll --show-progress \
     && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/json-lib-2.4-jenkins-2.jar -O ~/json-lib-2.4-jenkins-2.jar -q --progress=bar:force:noscroll --show-progress \
     && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/payload.jar -O ~/payload.jar -q --progress=bar:force:noscroll --show-progress \
-    && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/exploit.py -O ~/exploit.py -q --progress=bar:force:noscroll --show-progress  \
-    && wget https://raw.githubusercontent.com/jhseceng/secframework/master/payload/auto-sploit.sh -O ~/auto-sploit.sh -q --progress=bar:force:noscroll --show-progress \
     && wget https://raw.githubusercontent.com/jhseceng/secframework/master/attacker/exp-server.py -O ~/exp-server.py -q --progress=bar:force:noscroll --show-progress \
     && wget https://raw.githubusercontent.com/jhseceng/secframework/master/attacker/run.sh -O ~/run.sh -q --progress=bar:force:noscroll --show-progress \
     && wget https://raw.githubusercontent.com/jhseceng/secframework/master/attacker/web.zip -O ~/web.zip -q --progress=bar:force:noscroll --show-progress
@@ -27,6 +26,8 @@ RUN set -ex \
 COPY static /root/static
 COPY templates /root/templates
 COPY app.py /root/app.py
+COPY exploit.py /root/exploit.py
+COPY auto-sploit.sh /root/auto-sploit.sh
 
 EXPOSE 5000 443
 
@@ -46,5 +47,5 @@ USER root
 ENTRYPOINT ["/bin/tini", "--"]
 ENV FLASK_APP=/root/app.py
 ENV FLASK_DEBUG=1
-# CMD ["/usr/local/bin/run.sh"]
+#CMD ["/usr/local/bin/run.sh"]
 CMD ["flask", "run", "--host=0.0.0.0"]

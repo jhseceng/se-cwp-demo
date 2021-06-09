@@ -57,10 +57,10 @@
                 <ul class="dropdown-menu my-nav2 shadow p-3 color" aria-labelledby="navbarDropdown">
                 <a href="Stages" class="nav-item-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Web UI</a>
                     <a class="dropdown-item item1" href="{{ url_for('labinfra') }}">Lab Infrastructure</a>
-                <a class="dropdown-item item2" href="{{ url_for('launch_phase1') }}">Section 1</a>
-                <a class="dropdown-item item3" href="{{ url_for('launch_phase2') }}">Section 2</a>
-                    <a class="dropdown-item item4" href="{{ url_for('launch_phase3') }}">Section 3</a>
-                <a class="dropdown-item item5" href="{{ url_for('launch_phase4') }}">Section 4</a>
+                <a class="dropdown-item item2" href="{{ url_for('launch_attacker_view') }}">Section 1 - Attacker Perspective</a>
+                <a class="dropdown-item item3" href="{{ url_for('launch_defender_view') }}">Section 2 - Defender Perspective</a>
+{#                    <a class="dropdown-item item4" href="{{ url_for('launch_phase3') }}">Section 3</a>#}
+{#                <a class="dropdown-item item5" href="{{ url_for('launch_phase4') }}">Section 4</a>#}
                 </ul>
           </li>
     </ul>

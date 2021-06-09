@@ -85,11 +85,6 @@ async function fetchAsync () {
     .catch(reason => console.log(reason.message))
 })
 
-
-
-
-
-
 document.getElementById("submit").addEventListener("click",
 function start () {
     $('.collapse').collapse("hide")

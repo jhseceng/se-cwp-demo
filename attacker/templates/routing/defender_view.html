@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Stage 3 - Managing the Agent Install Process {% endblock %}
+{% block content %}
+
+<section class="card shadow p-3">
+    <div class="card-body">
+
+        <h1>Section 2 - Defender Perspective</h1><h1>CrowdStrike Protection</h1>
+
+        <!--Step 9-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingExploit">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse4"
+                        aria-expanded="false" aria-controls="#collapsCstrike1 #collapsCstrike2 #collapsCstrike3">
+                    Step 9 - Manage CrowdStrike Protection Policies
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsCstrike1">
+            <p>
+            <h2>Background</h2>
+            CrowdStrike sensors will be deployed with a default policy that provides protection for your workloads. The
+            policy may be customised by your security teams to meet specific objectives. One way that we can customise
+            the default policy is to add a "Custom IOA.<br>
+            <h2>Instructions</h2>
+            Log into your falcon console and follow the instructions in the link below to create your custom IOA and apply it to your Linux policy.
+            We will then install the falcon agent on the web server.
+            <br>
+            <a class="name-hlink" target="_blank"
+               href="/static/devdays-lab-manual-version1.5.pdf">Create a CrowdStrike Custom IOA (Lab 5)</a>
+            </p>
+        </div>
+
+        <!--Step 10-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="hostQuery">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link name-color" data-toggle="collapse"
+                        data-target=".multi-collapse6"
+                        aria-expanded="true" aria-controls="#collapse6Query1 #collapseQuery2 #collapseQuery3"
+                        id="queryHostsSubmit">
+                    Step 10 - Manage Falcon Agent Install
+                </button>
+            </h5>
+        </div>
+                <div class="card collapse multi-collapse6 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapse6Query1">
+            <p>
+            <h2>Background</h2>
+            We use AWS systems manager API to manage the falcon agent installation and removal from the EC2 host. The table below shows data obtained from both the AWS API and the CrowdStike API.  You will notice that the CrowdStrike 'aid' and agent version fields are populated when the agent install is complete.<br>
+
+            <br>
+
+            </p>
+        </div>
+        <div class="card collapse multi-collapse6 card-border shadow p-3" style="margin-top: 20px; margin-bottom: 5px"
+             id="collapse6Query1">
+            <div>
+                <button class="btn btn button-color sendbutton btn-md" id="drawHostTableSubmit">Refresh Table
+                </button>
+            </div>
+
+            <div>
+                <div class="loader2" id="spinnerHostQuery" style="visibility: hidden"></div>
+            </div>
+        </div>
+        <div class="card shadow collapse multi-collapse6 card-border p-3" style="visibility: visible"
+             id="query_host_out">
+            <div class="table-responsive">
+                <table id="hostQueryTable">
+                    <!-- here goes our data! -->
+                </table>
+            </div>
+            <div class="row">
+                <form class="form-group col-md-6">
+                    <label>
+                        <h6>package_name</h6>
+                    </label>
+                    <input type="text" class="form-control boxcolor" id="package_name" value="FalconSensor">
+                </form>
+                <form class="form-group col-md-6">
+                    <label>
+                        <h6>document_name</h6>
+                    </label>
+                    <input type="text" class="form-control boxcolor" id="document_name" value="AWS-ConfigureAWSPackage"
+                           readonly>
+                </form>
+                <form class="form-group col-md-6">
+                    <div class="btn btn button-color sendbutton" style="margin-top: 10px; visibility: visible"
+                         id="falconformInstallSubmit">Update Hosts
+                    </div>
+
+                    <div>
+                        <div class="loader2" id="spinnerfalconinstall" style="visibility: hidden"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+        <!--Step 11-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingExploit">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse7"
+                        aria-expanded="false" aria-controls="#collapsExploit1 #collapsExploit12 #collapsExploit13">
+                    Step 11 - Exploit
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse7 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsExploit1">
+            <p>
+                Re run the script to attack the web server.  This is a repeat of the task in section 2.   Either run the
+                attack again from the cli or using the button below.
+            </p>
+        </div>
+        <div class="card collapse multi-collapse7 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsExploit2">
+            <form style="margin-top: 15px">
+                <div class="form-group">
+                    <button class="btn btn button-color sendbutton"
+                            id="exploit_submit"
+                    >Run Exploit
+                    </button>
+                    <div class="loader" id="spinner" style="visibility: hidden"></div>
+                </div>
+                <div id="successAlert" class="alert alert-success" role="alert" style="display: none"></div>
+                <div id="errorAlert" class="alert alert-danger" role="alert" style="display: none"></div>
+            </form>
+        </div>
+        <div class="card collapse multi-collapse7 hide card-border shadow p-3 Exploit-output"
+             id="collapsExploit3"
+             style="visibility: hidden">
+    <pre id="Exploit_response">
+
+    </pre>
+        </div>
+
+        <!--Step 12-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingLateral">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse8"
+                        aria-expanded="false" aria-controls="#collapseLateral1 #collapseLateral12 #collapseLateral13">
+                    Step 12 - Lateral movement/Data Exfiltration
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse8 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateral1">
+            <p>Try to run the commands again and pay attention to the output if using the GUI.  You will now see that the
+            attack has been blocked and you no longer have control of the web server</p>
+        </div>
+        <div class="card collapse multi-collapse8 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateral2">
+            <div>
+                <form id="formsendcmd">
+                    <fieldset>
+                        <div class="form-group">
+                            <label for="customCommandInput">Enter Custom Command:</label>
+                            <input type="text" id="customCommandInput" class="form-control boxcolor"
+                                   placeholder="Custom Command">
+                        </div>
+                        <div class="form-group">
+                            <label for="cmdtosend">Select Command:</label>
+                            <select class="custom-select form-control boxcolor" id="cmdtosend">
+                                <option selected value="ls -al">List directory contents (ls -al)</option>
+                                <option value="ps -ef">View running processes (ps -ef)</option>
+                                <option value="netstat -an">View current network connections (netstat -an)</option>
+                                <option value="whoami">Identify running user (whoami)</option>
+                                <option value="apt-get update -y">Update application repository (apt-get update -y)</option>
+                                <option value="apt-get install -y dnsutils">Install DNSUtils (apt-get install -y dnsutils)</option>
+                                <option value="dig GuardDutyC2ActivityB.com any">dig GuardDutyC2ActivityB.com any
+                                </option>
+                                <option value="curl -s http://xmr.pool.minergate.com/dhdhjkhdjkhdjkhajkhdjskahhjkhjkahdsjkakjasdhkjahdjk > /dev/null">
+                                    Generate GuardDuty Bitcoin Mining Alert
+                                </option>
+                                <option value="ls -al /secret">List secret folder contents (ls -al /secret)</option>
+                                <option value="cat /secret/jenkins-flag.txt">Capture the Jenkins server flag</option>
+                                <option value="cat /secret/log_copy">Read the Jenkins log copy automation script</option>
+                                <option value="ssh $AUTOMATION ls -al">List automation server default directory contents</option>
+                                <option value="ssh $AUTOMATION whoami">Identify running automation user</option>
+                                <option value="ssh $AUTOMATION ls -al /secret">List automation server secret directory contents</option>
+                                <option value="ssh $AUTOMATION cat /secret/upload_log">Read automation server upload_log script</option>
+                            </select>
+                        </div>
+
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="disabledFieldsetCheck">
+                            <label class="custom-control-label" for="disabledFieldsetCheck">Check this custom
+                                checkbox</label>
+                        </div>
+
+                        <button class="btn btn button-color sendbutton" style="margin-top: 17px" id="send_submit"
+                        >Run Command
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+            <div>
+                <div class="loader4" id="spinnerlatmove" style="visibility: hidden"></div>
+            </div>
+            <!--            <form id="formsendcmd" style="margin-top: 20px; margin-left: 20px; margin-right: 20px; margin-bottom: 20px">-->
+            <!--                <div class="input-group">-->
+            <!--                    <div class="input-group-prepend">-->
+            <!--                        <label class="input-group-text opcolor" form="inputGroupSelect01">Options</label>-->
+            <!--                    </div>-->
+
+            <!--                </div>-->
+
+            <!--            </form>-->
+        </div>
+        <div class="card collapse multi-collapse8 hide card-border shadow p-3" id="collapseLateral3"
+             style="visibility: hidden">
+           <pre id="lateral_response" style="line-height:1">
+    </pre>
+        </div>
+
+    </div>
+</section>
+
+
+{% endblock content %}
+{% block scriptblock %}
+<!--<script src="/static/jenkins-common.js"></script>-->
+<script src="/static/phase3.js"></script>
+    <script src="/static/phase4.js"></script>
+<!--<script src="/static/jsonview.js"></script>-->
+{% endblock scriptblock %}

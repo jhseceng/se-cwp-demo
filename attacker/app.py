@@ -19,6 +19,7 @@ target_ip = os.environ['VICTIM']
 region = os.environ['REGION']
 log_group = os.environ['LOG_GROUP']
 
+
 gd_events_of_interest = ['Recon:EC2/PortProbeUnprotectedPort',
                          'Recon:EC2/Portscan',
                          'CryptoCurrency:EC2/BitcoinTool.B!DNS',
@@ -34,6 +35,31 @@ logger = logging.getLogger()
 
 app.config['SECRET_KEY'] = 'c27e5a04065046f45a88300d80baa8cd'
 
+
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         session.pop('user_id', None)
+#
+#         username = request.form['username']
+#         password = request.form['password']
+#
+#         user = [x for x in users if x.username == username][0]
+#         if user and user.password == password:
+#             session['user_id'] = user.id
+#             return redirect(url_for('profile'))
+#
+#         return redirect(url_for('login'))
+#
+#     return render_template('login.html')
+
+#
+# @app.route('/profile')
+# def profile():
+#     if not g.user:
+#         return redirect(url_for('login'))
+#
+#     return render_template('profile.html')
 
 @app.route("/installfalcon", methods=['POST'])
 def run_install_package():
@@ -401,7 +427,8 @@ def show_managed_instances():
 
 
 @app.route("/launch", methods=['GET', 'POST'])
-def launch_phase1():
+# @login_required
+def launch_attacker_view():
     """
     Accepts a JSON payload with the following structure:
     {
@@ -416,7 +443,7 @@ def launch_phase1():
     managed_instances = get_managed_instances()
 
     if request.method == 'GET':
-        return render_template('routing/phase1.html', log_group=log_group, attacker_ip=attacker_ip,
+        return render_template('routing/attacker_view.html', log_group=log_group, attacker_ip=attacker_ip,
                                managed_instances=managed_instances, gd_events_of_interest=gd_events_of_interest,
                                target_ip=target_ip)
 
@@ -469,8 +496,9 @@ def launch_phase1():
         res.headers['Content-type'] = 'application/json'
         return res
 
-@app.route("/launch_phase2", methods=['GET', 'POST'])
-def launch_phase2():
+@app.route("/launch_defender_view", methods=['GET', 'POST'])
+# @login_required
+def launch_defender_view():
     """
     Accepts a JSON payload with the following structure:
     {
@@ -485,7 +513,7 @@ def launch_phase2():
     managed_instances = get_managed_instances()
 
     if request.method == 'GET':
-        return render_template('routing/phase2.html', log_group=log_group, attacker_ip=attacker_ip,
+        return render_template('routing/defender_view.html', log_group=log_group, attacker_ip=attacker_ip,
                                managed_instances=managed_instances, gd_events_of_interest=gd_events_of_interest,
                                target_ip=target_ip)
 
@@ -539,6 +567,7 @@ def launch_phase2():
         return res
 
 @app.route("/launch_phase3", methods=['GET'])
+# @login_required
 def launch_phase3():
     if request.method == 'GET':
         tag_name = 'demo-purpose'
@@ -561,10 +590,11 @@ def launch_phase3():
             instance_list.append(inst["Instances"][0]['InstanceId'])
         # fc = {"Criterion": {"resource.instanceDetails.instanceId": {"Eq": [instance['AWS InstanceId']]}}}
         managed_instances = get_managed_instances()
-        return render_template('routing/phase3.html', log_group=log_group, attacker_ip=attacker_ip,
+        return render_template('routing/defender_view.html', log_group=log_group, attacker_ip=attacker_ip,
                                managed_instances=managed_instances, gd_events_of_interest=instance_list)
 
 @app.route("/launch_phase4", methods=['GET', 'POST'])
+# @login_required
 def launch_phase4():
     """
     Accepts a JSON payload with the following structure:
